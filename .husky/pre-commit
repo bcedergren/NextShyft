@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+pnpm -r --if-present typecheck && pnpm -r --if-present test && pnpm -r --if-present lint
+
+

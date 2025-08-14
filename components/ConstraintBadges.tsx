@@ -1,0 +1,1 @@
+// ConstraintBadges.tsx placeholder

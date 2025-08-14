@@ -1,0 +1,32 @@
+
+name: Auto Tag on Green CI
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+jobs:
+  tag:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Create tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = `v${new Date().toISOString().replace(/[-:T.Z]/g,'').slice(0,12)}`;
+            core.info(`Creating tag ${tag}`);
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${tag}`,
+              sha: context.sha
+            });

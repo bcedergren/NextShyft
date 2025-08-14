@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm i
+      - name: Type check (if present)
+        run: pnpm -r --if-present typecheck
+      - name: Build (if present)
+        run: pnpm -r --if-present build
+      - name: Run tests
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/nextshyft_test
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        run: pnpm -r --if-present test
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm i
+      - name: Build web
+        run: pnpm --filter apps/web build
+      - name: Start server
+        run: pnpm --filter apps/web start &
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000/api/health
+      - name: Run Playwright tests
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          TEST_BYPASS_AUTH: 1
+        run: pnpm --filter apps/web e2e
