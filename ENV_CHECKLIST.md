@@ -13,6 +13,10 @@
 ## App branding
 - `APP_NAME=` NextShyft (optional)
 
+## Demo mode (optional)
+- `NEXT_PUBLIC_DEMO_MODE=` 1
+- `NEXT_PUBLIC_DEMO_ORG_ID=` 689e3862cd3e503e177a5715
+
 ## Stripe (Billing)
 - `STRIPE_SECRET_KEY=` sk_test_...
 - `STRIPE_WEBHOOK_SECRET=` whsec_...

@@ -34,7 +34,11 @@ export default function Dashboard() {
   const router = useRouter();
   const pathname = usePathname();
   const roles = ((session as any)?.roles || []) as string[];
-  const orgId = (session as any)?.orgId || 'demo';
+	const orgId = ((session as any)?.orgId as string) || null;
+	const demoMode =
+		process.env.NEXT_PUBLIC_DEMO_MODE === '1' ||
+		process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+	const demoOrgId = (process.env.NEXT_PUBLIC_DEMO_ORG_ID as string) || null;
   const isManager = roles.some((r) => ['MANAGER', 'OWNER', 'ADMIN', 'SUPERADMIN'].includes(r));
   const [pendingInvites, setPendingInvites] = useState<number>(0);
   const [pendingSwaps, setPendingSwaps] = useState<number>(0);
@@ -43,13 +47,14 @@ export default function Dashboard() {
     publishedAt?: string | null;
   } | null>(null);
 
-  // Redirect bare /dashboard to org-scoped dashboard
-  useEffect(() => {
-    if (!pathname) return;
-    if (!pathname.startsWith(`/org/`) && orgId) {
-      router.replace(`/org/${orgId}/dashboard`);
-    }
-  }, [pathname, orgId, router]);
+	// Redirect bare /dashboard to org-scoped dashboard (demo only or if session has org)
+	useEffect(() => {
+		if (!pathname) return;
+		const targetOrgId = orgId || (demoMode ? demoOrgId : null);
+		if (!pathname.startsWith(`/org/`) && targetOrgId) {
+			router.replace(`/org/${targetOrgId}/dashboard`);
+		}
+	}, [pathname, orgId, demoMode, demoOrgId, router]);
 
   // Managers can now view the dashboard; remove other redirects
 
