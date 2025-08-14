@@ -1,5 +1,9 @@
 # NextShyft Scaffold
 
+NextShyft is a Next.js 14 app scaffold for workforce scheduling and shift management.
+
+![CI](https://github.com/bcedergren/NextShyft/actions/workflows/ci.yml/badge.svg)
+
 Run `pnpm install && pnpm dev` inside `apps/web`
 
 ## Setup Instructions
