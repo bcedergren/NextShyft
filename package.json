@@ -9,7 +9,10 @@
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
-    "postinstall": " npx playwright install --with-deps || true"
+    "postinstall": " npx playwright install --with-deps || true",
+    "seed:demo": "tsx scripts/seed.ts",
+    "seed:metrics": "tsx scripts/seed-metrics.ts",
+    "seed:dashboard": "tsx scripts/seed-dashboard.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
@@ -46,6 +49,9 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.4.5",
-    "wait-on": "^7.2.0"
+    "wait-on": "^7.2.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.16.2"
   }
 }
