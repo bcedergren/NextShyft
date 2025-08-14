@@ -44,6 +44,13 @@ export default withAuth(
       // Determine if user is authorized to access this route
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
+        // Allow public demo access when a mock session cookie is present and bypass is enabled
+        if (
+          process.env.TEST_BYPASS_AUTH === '1' &&
+          Boolean(req.cookies.get('__mocksession')?.value)
+        ) {
+          return true;
+        }
         if (isPublicPath(pathname)) return true;
         // Require authentication for all matched routes not explicitly public
         return !!token;
