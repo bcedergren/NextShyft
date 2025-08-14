@@ -2,10 +2,10 @@
 import AppShell from '../../../components/AppShell';
 import { Alert, Button, Stack, TextField, Typography, Box } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 
-export default function SignInPage() {
+function SignInInner() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -99,5 +99,13 @@ export default function SignInPage() {
         </Box>
       </Stack>
     </AppShell>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInInner />
+    </Suspense>
   );
 }

@@ -20,11 +20,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ ok: true, invite: doc });
 }
 
-import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import Invite from '@/models/Invite';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { auditService } from '@/lib/di';
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {

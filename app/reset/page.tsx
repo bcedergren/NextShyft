@@ -1,10 +1,10 @@
 'use client';
 import AppShell from '@/components/AppShell';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Alert, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 
-export default function ResetPage() {
+function ResetInner() {
   const params = useSearchParams();
   const token = params.get('token') || '';
   const router = useRouter();
@@ -52,5 +52,13 @@ export default function ResetPage() {
         </Paper>
       </Stack>
     </AppShell>
+  );
+}
+
+export default function ResetPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetInner />
+    </Suspense>
   );
 }

@@ -22,7 +22,7 @@
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "javascript-lp-solver": "^0.4.24",
-    "mongodb": "^6.6.0",
+    "mongodb": "^5.9.2",
     "mongoose": "^8.5.1",
     "next": "14.2.4",
     "next-auth": "^4.24.8",

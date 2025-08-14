@@ -214,7 +214,9 @@ export default function ReportsPage() {
               </TableHead>
               <TableBody>
                 {topHours.map((r) => {
-                  const u = stats.usersById[r.uid] as { _id: string; name?: string; email?: string } | undefined;
+                  const u = stats.usersById[r.uid] as
+                    | { _id: string; name?: string; email?: string }
+                    | undefined;
                   const name = u?.name || u?.email || r.uid;
                   return (
                     <TableRow key={r.uid}>
