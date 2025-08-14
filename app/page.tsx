@@ -22,7 +22,7 @@ export default function Page() {
                   Sign Up
                 </Button>
               </Link>
-              <Link href="/dashboard">
+              <Link href="/demo">
                 <Button variant="outlined" size="large">
                   View Demo
                 </Button>
