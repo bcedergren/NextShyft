@@ -16,6 +16,7 @@ import { useState } from 'react';
 
 export default function SignUpPage() {
   const [mode, setMode] = useState<'new' | 'join'>('new');
+  const [plan, setPlan] = useState<'free' | 'pro' | 'business'>('free');
   const [orgName, setOrgName] = useState('');
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -34,12 +35,18 @@ export default function SignUpPage() {
       const r = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orgName, email, firstName, lastName, password }),
+        body: JSON.stringify({ orgName, email, firstName, lastName, password, plan }),
       });
       const d = await r.json().catch(() => ({}));
       console.log('Signup response:', r.status, d);
-      if (r.ok) setOk(true);
-      else setErr(d.error || 'Signup failed');
+      if (r.ok) {
+        // If server returns a checkout URL for paid plans, redirect there.
+        if (d.checkoutUrl) {
+          window.location.href = d.checkoutUrl as string;
+          return;
+        }
+        setOk(true);
+      } else setErr(d.error || 'Signup failed');
     } else {
       console.log('Joining with code...', { email, code, firstName, lastName, password });
       const r = await fetch('/api/join', {
@@ -84,7 +91,6 @@ export default function SignUpPage() {
             bgcolor: '#fff',
           }}
         >
-
           <Stack spacing={4} alignItems="center">
             <Typography
               variant="h3"
@@ -182,7 +188,7 @@ export default function SignUpPage() {
               </Alert>
             )}
 
-            <Stack spacing={3} sx={{ width: '100%', maxWidth: '400px' }}>
+            <Stack spacing={3} sx={{ width: '100%', maxWidth: '640px' }}>
               {mode === 'new' && (
                 <Box>
                   <Typography
@@ -220,6 +226,98 @@ export default function SignUpPage() {
                       },
                     }}
                   />
+                </Box>
+              )}
+
+              {mode === 'new' && (
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 1, color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}
+                  >
+                    Choose a plan
+                  </Typography>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <Paper
+                      role="button"
+                      onClick={() => setPlan('free')}
+                      elevation={plan === 'free' ? 4 : 1}
+                      sx={{
+                        p: 2,
+                        flex: 1,
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        border: plan === 'free' ? '2px solid #1f2937' : '1px solid #e5e7eb',
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="subtitle1" fontWeight={600}>
+                          Free
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          $0/mo
+                        </Typography>
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary">
+                        Up to 5 staff
+                      </Typography>
+                    </Paper>
+                    <Paper
+                      role="button"
+                      onClick={() => setPlan('pro')}
+                      elevation={plan === 'pro' ? 4 : 1}
+                      sx={{
+                        p: 2,
+                        flex: 1,
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        border: plan === 'pro' ? '2px solid #1f2937' : '1px solid #e5e7eb',
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="subtitle1" fontWeight={600}>
+                          Pro
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          $49/mo
+                        </Typography>
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary">
+                        Up to 25 staff
+                      </Typography>
+                    </Paper>
+                    <Paper
+                      role="button"
+                      onClick={() => setPlan('business')}
+                      elevation={plan === 'business' ? 4 : 1}
+                      sx={{
+                        p: 2,
+                        flex: 1,
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        border: plan === 'business' ? '2px solid #1f2937' : '1px solid #e5e7eb',
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="subtitle1" fontWeight={600}>
+                          Business
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          $99/mo
+                        </Typography>
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary">
+                        Unlimited staff
+                      </Typography>
+                    </Paper>
+                  </Stack>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1, display: 'block' }}
+                  >
+                    You can change plans anytime. Paid plans will take you to checkout after signup.
+                  </Typography>
                 </Box>
               )}
 

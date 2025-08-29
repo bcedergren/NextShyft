@@ -39,28 +39,14 @@ export async function POST(req: Request) {
   const orgId = (session as any).orgId;
   const { email, role, firstName = '', lastName = '' } = await req.json();
   await dbConnect();
-  const tok = token();
-  const created = await (Invite as any).create({
-    orgId,
-    email,
-    role,
-    token: tok,
-    firstName,
-    lastName,
-  });
-  await auditService.log(orgId, (session as any).user?.email, 'INVITE_CREATED', { email, role });
-  // send email via Resend
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || 'noreply@nextshyft.app';
-  if (apiKey) {
-    const resend = new Resend(apiKey);
-    const link = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/accept?token=${tok}`;
-    await resend.emails.send({
-      from,
-      to: email,
-      subject: "You're invited to NextShyft",
-      html: inviteEmail(link, firstName, lastName) /* templated */,
-    });
+  try {
+    const created = await inviteService.createInvite(orgId, email, role);
+    await auditService.log(orgId, (session as any).user?.email, 'INVITE_CREATED', { email, role });
+    return NextResponse.json({ ok: true, invite: created });
+  } catch (e: any) {
+    if (e?.code === 'PLAN_LIMIT') {
+      return NextResponse.json({ error: 'Plan limit reached', upgrade: true }, { status: 402 });
+    }
+    return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, invite: created });
 }
