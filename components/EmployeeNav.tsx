@@ -1,48 +1,98 @@
 'use client';
-import { BottomNavigation, BottomNavigationAction, Paper } from '@mui/material';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import AvTimerIcon from '@mui/icons-material/AvTimer';
-import InboxIcon from '@mui/icons-material/Inbox';
-import PersonIcon from '@mui/icons-material/Person';
+import { Box, Button, Container, Tooltip } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import HomeIcon from '@mui/icons-material/Home';
+import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import PeopleIcon from '@mui/icons-material/People';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import PersonIcon from '@mui/icons-material/Person';
 
 export default function EmployeeNav() {
   const path = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
-  const [val, setVal] = useState(0);
+  const [activeTab, setActiveTab] = useState('');
+
+  const orgId = (session as any)?.orgId || 'demo';
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', path: `/org/${orgId}/dashboard`, icon: <HomeIcon /> },
+    {
+      id: 'myschedule',
+      label: 'Company Schedule',
+      path: `/org/${orgId}/myschedule`,
+      icon: <ViewWeekIcon />,
+    },
+    {
+      id: 'availability',
+      label: 'Availability',
+      path: `/org/${orgId}/availability`,
+      icon: <PeopleIcon />,
+    },
+    { id: 'hours', label: 'Hours', path: `/org/${orgId}/hours`, icon: <AnalyticsIcon /> },
+    { id: 'inbox', label: 'Inbox', path: `/org/${orgId}/inbox`, icon: <CampaignIcon /> },
+    { id: 'profile', label: 'Profile', path: `/org/${orgId}/profile`, icon: <PersonIcon /> },
+  ];
 
   useEffect(() => {
-    const orgId = (session as any)?.orgId || 'demo';
-    const map: Record<number, string> = {
-      0: `/org/${orgId}/me`,
-      1: `/org/${orgId}/hours`,
-      2: `/org/${orgId}/inbox`,
-      3: `/org/${orgId}/profile`,
-    };
-    const idx = Object.values(map).findIndex((p) => path?.startsWith(p));
-    setVal(idx >= 0 ? idx : 0);
-  }, [path, session]);
+    const currentPath = path || '';
+    const activeTab = tabs.find((tab) => currentPath.startsWith(tab.path));
+    setActiveTab(activeTab?.id || 'dashboard');
+  }, [path, tabs]);
 
-  const handle = (_: any, newVal: number) => {
-    setVal(newVal);
-    const orgId = (session as any)?.orgId || 'demo';
-    if (newVal === 0) router.push(`/org/${orgId}/me`);
-    if (newVal === 1) router.push(`/org/${orgId}/hours`);
-    if (newVal === 2) router.push(`/org/${orgId}/inbox`);
-    if (newVal === 3) router.push(`/org/${orgId}/profile`);
+  const handleTabClick = (tabId: string, tabPath: string) => {
+    setActiveTab(tabId);
+    router.push(tabPath);
   };
 
   return (
-    <Paper sx={{ position: 'sticky', bottom: 0, left: 0, right: 0 }}>
-      <BottomNavigation value={val} onChange={handle} showLabels>
-        <BottomNavigationAction label="Schedule" icon={<CalendarMonthIcon />} />
-        <BottomNavigationAction label="Hours" icon={<AvTimerIcon />} />
-        <BottomNavigationAction label="Inbox" icon={<InboxIcon />} />
-        <BottomNavigationAction label="Profile" icon={<PersonIcon />} />
-      </BottomNavigation>
-    </Paper>
+    <Box
+      sx={{
+        borderBottom: 1,
+        borderColor: 'divider',
+        bgcolor: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(8px)',
+      }}
+    >
+      <Container disableGutters maxWidth="xl">
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 1,
+            py: 1,
+            overflowX: 'auto',
+          }}
+        >
+          {tabs.map((tab) => (
+            <Tooltip key={tab.id} title={tab.label}>
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => handleTabClick(tab.id, tab.path)}
+                startIcon={tab.icon}
+                sx={{
+                  textTransform: 'none',
+                  opacity: activeTab === tab.id ? 1 : 0.85,
+                  fontWeight: activeTab === tab.id ? 600 : 400,
+                  color: activeTab === tab.id ? '#1f2937' : '#6b7280',
+                  minWidth: 'auto',
+                  px: 2,
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.04)',
+                  },
+                }}
+              >
+                {tab.label}
+              </Button>
+            </Tooltip>
+          ))}
+        </Box>
+      </Container>
+    </Box>
   );
 }

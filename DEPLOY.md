@@ -1,4 +1,3 @@
-
 # NextShyft — Staging Deploy Guide (Vercel + MongoDB Atlas + Resend + Stripe + VAPID)
 
 This gets you to a real, testable staging environment with emails, payments, and web push.
@@ -6,10 +5,12 @@ This gets you to a real, testable staging environment with emails, payments, and
 ---
 
 ## 1) Repos & local prerequisites
+
 - Node 18+, PNPM
 - Accounts: **Vercel**, **MongoDB Atlas**, **Resend**, **Stripe**
 
 Clone repo and run locally to confirm:
+
 ```bash
 pnpm i
 pnpm dev
@@ -18,6 +19,7 @@ pnpm dev
 ---
 
 ## 2) MongoDB Atlas
+
 1. Create a free cluster.
 2. Create a database user.
 3. Get your connection string (**SRV**) and set:
@@ -27,6 +29,7 @@ pnpm dev
 ---
 
 ## 3) Resend (emails)
+
 1. Create a Resend project and API key.
 2. Verify a sending domain (e.g., `mail.nextshyft.app`) and set DNS as instructed.
 3. Set env:
@@ -34,11 +37,13 @@ pnpm dev
    - `EMAIL_FROM=no-reply@yourdomain`
 
 Emails used:
+
 - Invites, Schedule Published, Swap Decisions (via templates in `/emails`).
 
 ---
 
 ## 4) Stripe (billing)
+
 1. Create prices:
    - `STRIPE_PRICE_PRO`
    - `STRIPE_PRICE_BUSINESS`
@@ -55,11 +60,15 @@ Emails used:
 ---
 
 ## 5) Web Push (VAPID)
+
 Generate keys:
+
 ```bash
 npx web-push generate-vapid-keys
 ```
+
 Set:
+
 - `VAPID_PUBLIC_KEY=...`
 - `VAPID_PRIVATE_KEY=...`
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY=...` (use the same public key)
@@ -68,13 +77,16 @@ Set:
 ---
 
 ## 6) NextAuth (auth)
+
 Set the cookie/crypto secrets:
+
 - `NEXTAUTH_SECRET=` (use `openssl rand -base64 32`)
 - `NEXTAUTH_URL=https://<your-domain>`
 
 ---
 
 ## 7) Vercel project
+
 1. **Import** your GitHub repo into Vercel.
 2. Add all env vars above in **Project → Settings → Environment Variables**.
 3. Configure:
@@ -87,6 +99,7 @@ Set the cookie/crypto secrets:
 ---
 
 ## 8) Post-deploy checks
+
 - **Auth**: Log in / out.
 - **DB**: Create org, positions, templates; ensure data persists.
 - **Email**: Invite a user → receive in inbox.
@@ -97,12 +110,14 @@ Set the cookie/crypto secrets:
 ---
 
 ## 9) Domains & redirects (optional)
+
 - Point `staging.nextshyft.app` at Vercel.
 - Add `www` redirect if you like.
 
 ---
 
 ## 10) Troubleshooting
+
 - **Webhook errors**: Check `STRIPE_WEBHOOK_SECRET` and that body parsing is disabled (see code).
 - **Emails not sending**: Domain not verified, or Resend key missing.
 - **Push not working**: Service worker path must be `/service-worker.js`. Check that VAPID public key is present on client.
@@ -111,6 +126,7 @@ Set the cookie/crypto secrets:
 ---
 
 ## 11) Recommended staging data
+
 - Seed an org with `signupCode` from Org Settings.
 - Invite a few test users with different roles.
-- Create a weekly coverage grid and run the Wizard end-to-end.
+- Create a weekly coverage grid, then use the Schedule page to assign and move staff between shifts.

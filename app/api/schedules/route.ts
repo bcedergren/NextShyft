@@ -11,7 +11,11 @@ export async function GET(req: Request) {
     req,
     async ({ orgId }) => {
       await dbConnect();
-      const schedules = await (Schedule as any).find({ orgId }).sort({ createdAt: -1 }).limit(10);
+      // Order by creation time and also periodStart desc as a tie-breaker to surface newest periods first
+      const schedules = await (Schedule as any)
+        .find({ orgId })
+        .sort({ createdAt: -1, periodStart: -1 })
+        .limit(10);
       return NextResponse.json(schedules);
     },
     ['EMPLOYEE', 'MANAGER', 'OWNER'],

@@ -2,6 +2,7 @@
 import AppShell from '@/components/AppShell';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Box,
   Paper,
   Stack,
   Typography,
@@ -52,7 +53,40 @@ export default function MyHoursDetail() {
   return (
     <AppShell>
       <Stack spacing={2}>
-        <Typography variant="h5">My Hours</Typography>
+        <Typography variant="h5">My Hours & Time Tracking</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Track your work hours, view shift details, and export your time records.
+        </Typography>
+        {/* Month Summary */}
+        <Paper sx={{ p: 2, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>
+          <Stack direction="row" spacing={3} alignItems="center" justifyContent="space-around">
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary.main" fontWeight="bold">
+                {rows.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Days Worked
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary.main" fontWeight="bold">
+                {total.toFixed(1)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Hours
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary.main" fontWeight="bold">
+                {(total / rows.length || 0).toFixed(1)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Avg Hours/Day
+              </Typography>
+            </Box>
+          </Stack>
+        </Paper>
+        
         <Stack direction="row" spacing={2} alignItems="center">
           <IconButton
             aria-label="Previous month"

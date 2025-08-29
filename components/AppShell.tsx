@@ -6,8 +6,6 @@ import {
   Toolbar,
   Typography,
   Button,
-  Tabs,
-  Tab,
   IconButton,
   Drawer,
   List,
@@ -16,20 +14,22 @@ import {
   ListItemIcon,
   Divider,
 } from '@mui/material';
-import Image from 'next/image';
-import NotifBell from '@/components/NotifBell';
 import SuspendedBanner from '@/components/SuspendedBanner';
 import SuspendedGate from '@/components/SuspendedGate';
 import ReadOnlyStyles from '@/components/ReadOnlyStyles';
 import ManagerSideNav from '@/components/ManagerSideNav';
 import ManagerNav from '@/components/ManagerNav';
 import RateLimitToast from '@/components/RateLimitToast';
+import EmployeeTopNav from '@/components/EmployeeTopNav';
+import ManagerTopNav from '@/components/ManagerTopNav';
+import OwnerTopNav from '@/components/OwnerTopNav';
+import AdminTopNav from '@/components/AdminTopNav';
 import UpgradeChip from '@/components/UpgradeChip';
 import ReadonlyBypassToggle from '@/components/ReadonlyBypassToggle';
 import ManagerSettingsMenu from '@/components/ManagerSettingsMenu';
-import { Alert, IconButton as MIconButton } from '@mui/material';
+import { Alert } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -37,19 +37,12 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 import PeopleIcon from '@mui/icons-material/People';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import HomeIcon from '@mui/icons-material/Home';
-import Tooltip from '@mui/material/Tooltip';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import FactCheckIcon from '@mui/icons-material/FactCheck';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import LogoutIcon from '@mui/icons-material/Logout';
+// import LogoutIcon from '@mui/icons-material/Logout';
 
 function PinnedAnnouncement() {
   const [ann, setAnn] = useState<any | null>(null);
@@ -91,10 +84,12 @@ function PinnedAnnouncement() {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [roles, setRoles] = useState<string[]>([]);
+  const [orgName, setOrgName] = useState<string>('');
+  const prevTitleRef = useRef<string | null>(null);
   const path = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
-  const authed = status !== 'unauthenticated' || roles.length > 0;
+  const authed = status === 'authenticated' || (status !== 'loading' && roles.length > 0);
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -110,6 +105,67 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       alive = false;
     };
   }, []);
+
+  // Hide browser print header (which shows document.title) to avoid duplicate "NextShyft" on print
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleBeforePrint = () => {
+      if (prevTitleRef.current === null) {
+        prevTitleRef.current = document.title;
+        document.title = ' ';
+      }
+    };
+    const handleAfterPrint = () => {
+      if (prevTitleRef.current !== null) {
+        document.title = prevTitleRef.current;
+        prevTitleRef.current = null;
+      }
+    };
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+    const media = window.matchMedia ? window.matchMedia('print') : null;
+    const mediaListener = (e: MediaQueryListEvent) => {
+      if (e.matches) handleBeforePrint();
+      else handleAfterPrint();
+    };
+    if (media) {
+      // Support both modern and older browsers
+      if ('addEventListener' in media) media.addEventListener('change', mediaListener);
+      // @ts-ignore deprecated API
+      else if ('addListener' in media) media.addListener(mediaListener);
+    }
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+      if (media) {
+        if ('removeEventListener' in media) media.removeEventListener('change', mediaListener);
+        // @ts-ignore deprecated API
+        else if ('removeListener' in media) media.removeListener(mediaListener);
+      }
+    };
+  }, []);
+
+  // Load organization name for the current session (if authenticated)
+  useEffect(() => {
+    let alive = true;
+    if (!authed) {
+      setOrgName('');
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch('/api/org', { cache: 'no-store' });
+        if (!res.ok) return;
+        const org = await res.json();
+        if (alive) setOrgName(org?.name || '');
+      } catch {
+        if (alive) setOrgName('');
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [authed]);
   const sessionRoles = ((session as any)?.roles || []) as string[];
   const effectiveRoles = (roles.length > 0 ? roles : sessionRoles).map((r) =>
     String(r).toUpperCase(),
@@ -117,216 +173,151 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isManager = ['MANAGER', 'OWNER', 'ADMIN', 'SUPERADMIN'].some((r) =>
     effectiveRoles.includes(r),
   );
+
+  // Determine user role for navigation
+  const isEmployee = effectiveRoles.includes('EMPLOYEE') && !isManager;
+  const isManagerRole =
+    effectiveRoles.includes('MANAGER') &&
+    !effectiveRoles.includes('OWNER') &&
+    !effectiveRoles.includes('ADMIN');
+  const isOwner = effectiveRoles.includes('OWNER') && !effectiveRoles.includes('ADMIN');
+  const isAdmin = effectiveRoles.includes('ADMIN') || effectiveRoles.includes('SUPERADMIN');
   const orgIdFromPath = (() => {
     const m = (path || '').match(/^\/org\/([^\/]+)/);
     return m?.[1] || null;
   })();
   const orgId = orgIdFromPath || (session as any)?.orgId || 'demo';
-  const employeeNavActive = /^\/org\/[^/]+\/(myschedule|me|hours|inbox|profile)/.test(path || '');
-  const onSchedulePage =
-    (path || '').startsWith(`/org/${orgId}/schedule`) ||
-    (path || '').startsWith(`/org/${orgId}/wizard`);
-  const onDashboard =
-    path?.startsWith(`/org/${orgId}/dashboard`) || path?.startsWith('/dashboard') || false;
-  const sectionMatch = (path || '').match(/^\/org\/[^/]+\/(myschedule|me|hours|inbox|profile)/);
-  const section = onDashboard ? 'dashboard' : sectionMatch?.[1] || '';
+  const onSchedulePage = (path || '').startsWith(`/org/${orgId}/schedule`);
   const isCoveragePage = (path || '').startsWith(`/org/${orgId}/coverage`);
   const isSchedulePage = (path || '').startsWith(`/org/${orgId}/schedule`);
   const isShiftsPage = (path || '').startsWith(`/org/${orgId}/shifts`);
   const isPositionsPage = (path || '').startsWith(`/org/${orgId}/positions`);
-  const tabIds: string[] = ['dashboard', 'myschedule', 'me', 'hours', 'profile'];
-  const tabDefs = tabIds.map((id) => ({
-    id,
-    label:
-      id === 'myschedule'
-        ? 'Schedule'
-        : id === 'me'
-          ? 'Availability'
-          : id === 'hours'
-            ? 'Hours'
-            : id === 'inbox'
-              ? 'Inbox'
-              : id === 'profile'
-                ? 'Profile'
-                : 'Dashboard',
-  }));
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const employeeTabIndex = Math.max(0, tabIds.indexOf(section));
-  const handleEmployeeTab = (_: any, idx: number) => {
-    const id = tabIds[idx] || 'me';
-    if (id === 'dashboard') router.push(`/org/${orgId}/dashboard`);
-    else router.push(`/org/${orgId}/${id}`);
-  };
-  const onManagerNav = (target: 'dashboard' | 'schedule' | 'people' | 'reports') => {
-    router.push(`/org/${orgId}/${target}`);
-  };
-  const managerActiveIndex = (() => {
-    const base = `/org/${orgId}`;
-    if ((path || '').startsWith(`${base}/schedule`)) return 0;
-    if ((path || '').startsWith(`${base}/people`)) return 1;
-    if ((path || '').startsWith(`${base}/reports`)) return 2;
-    return -1;
-  })();
   const managerSideNavRoutes = new RegExp(
-    `^/org/${orgId}/(positions|shifts|wizard|coverage|policy|holidays|org-settings)`,
+    `^/org/${orgId}/(positions|shifts|coverage|policy|holidays|org-settings)`,
   );
   const showManagerSideNav =
-    !employeeNavActive && (managerSideNavRoutes.test(path || '') || onSchedulePage);
-  const showManagerTopNav = !employeeNavActive && (path || '').startsWith(`/org/${orgId}/`);
-  // Removed More menu; promote items to the top navbar
+    !isEmployee && (managerSideNavRoutes.test(path || '') || onSchedulePage);
+
   return (
     <>
       <Box>
-        <AppBar position="sticky" elevation={0}>
-          <Toolbar sx={{ gap: 1, px: 1, position: 'relative' }}>
+        <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'white', color: '#1f2937' }}>
+          <Toolbar sx={{ gap: 1, px: 1, position: 'relative', flexWrap: 'wrap' }}>
+            {/* Logo + Company name (responsive: stacked on mobile, inline on larger screens) */}
             <Box
               sx={{
+                mr: { xs: 2, md: 2 },
                 display: 'flex',
-                alignItems: 'center',
-                mr: { xs: 0, md: 2 },
-                position: { xs: 'absolute', md: 'static' },
-                left: { xs: '50%', md: 'auto' },
-                transform: { xs: 'translateX(-50%)', md: 'none' },
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                minWidth: 0,
+                flexShrink: 0,
               }}
             >
-              <Image src="/logo.png" alt="NextShyft" width={120} height={32} priority />
-            </Box>
-            {/* Employee navbar links removed */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
-              {showManagerTopNav && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
-                  {/* Desktop navbar items (hidden on mobile) */}
-                  <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
-                    <Tooltip title="Dashboard">
-                      <Button
-                        color="inherit"
-                        size="small"
-                        onClick={() => router.push(`/org/${orgId}/dashboard`)}
-                        startIcon={<HomeIcon />}
-                        sx={{ textTransform: 'none', opacity: 0.85 }}
-                      >
-                        Dashboard
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Schedule">
-                      <Button
-                        color="inherit"
-                        size="small"
-                        onClick={() => onManagerNav('schedule')}
-                        startIcon={<ViewWeekIcon />}
-                        sx={{
-                          textTransform: 'none',
-                          opacity: managerActiveIndex === 0 ? 1 : 0.85,
-                          fontWeight: managerActiveIndex === 0 ? 600 : 400,
-                        }}
-                      >
-                        Schedule
-                      </Button>
-                    </Tooltip>
-                    {/* Keep People and Reports in top nav across all pages; exclude sidebar items */}
-                    <Tooltip title="People">
-                      <Button
-                        color="inherit"
-                        size="small"
-                        onClick={() => onManagerNav('people')}
-                        startIcon={<PeopleIcon />}
-                        sx={{
-                          textTransform: 'none',
-                          opacity: managerActiveIndex === 1 ? 1 : 0.85,
-                          fontWeight: managerActiveIndex === 1 ? 600 : 400,
-                        }}
-                      >
-                        People
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Reports">
-                      <Button
-                        color="inherit"
-                        size="small"
-                        onClick={() => onManagerNav('reports')}
-                        startIcon={<AnalyticsIcon />}
-                        sx={{
-                          textTransform: 'none',
-                          opacity: managerActiveIndex === 2 ? 1 : 0.85,
-                          fontWeight: managerActiveIndex === 2 ? 600 : 400,
-                        }}
-                      >
-                        Reports
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Directory">
-                      <Button
-                        color="inherit"
-                        size="small"
-                        startIcon={<PeopleIcon />}
-                        onClick={() => router.push(`/org/${orgId}/directory`)}
-                        sx={{ textTransform: 'none', opacity: 0.85 }}
-                      >
-                        Directory
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Swaps">
-                      <Button
-                        color="inherit"
-                        size="small"
-                        startIcon={<SwapHorizIcon />}
-                        onClick={() => router.push(`/org/${orgId}/swaps`)}
-                        sx={{ textTransform: 'none', opacity: 0.85 }}
-                      >
-                        Swaps
-                      </Button>
-                    </Tooltip>
-
-                    <Tooltip title="Announcements">
-                      <Button
-                        color="inherit"
-                        size="small"
-                        startIcon={<CampaignIcon />}
-                        onClick={() => router.push(`/org/${orgId}/announcements`)}
-                        sx={{ textTransform: 'none', opacity: 0.85 }}
-                      >
-                        Announcements
-                      </Button>
-                    </Tooltip>
-                  </Box>
-                </Box>
+              <Typography
+                variant="h5"
+                sx={{ color: 'inherit', lineHeight: 1, mt: { xs: 0.75, sm: 1 } }}
+              >
+                NextShyft
+              </Typography>
+              {authed && !!orgName && (
+                <Typography
+                  noWrap={false}
+                  variant="subtitle1"
+                  sx={{
+                    color: '#6b7280',
+                    fontWeight: 400,
+                    mt: { xs: 0.75, sm: 1 },
+                    // Add more space between the logo and name on larger screens
+                    ml: { xs: 0, sm: 8, md: 10 },
+                    minWidth: 0,
+                    // Allow wrapping (no truncation) at all sizes
+                    maxWidth: { xs: '100%', sm: 'none' },
+                    whiteSpace: 'normal',
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                    wordBreak: 'break-word',
+                    flexShrink: 0,
+                  }}
+                  title={orgName}
+                >
+                  {orgName}
+                </Typography>
               )}
-              {authed ? (
-                <>
-                  <ReadonlyBypassToggle />
-                  <UpgradeChip />
-                  <NotifBell />
-                  {isManager && <ManagerSettingsMenu />}
-                  {/* Mobile hamburger moved to the right of the notification bell */}
-                  <IconButton
-                    color="inherit"
-                    size="small"
-                    aria-label="menu"
-                    onClick={() => setMobileMenuOpen(true)}
-                    sx={{ display: { xs: 'inline-flex', md: 'none' }, ml: 0.5 }}
-                  >
-                    <MenuIcon />
-                  </IconButton>
-                  <Button
-                    onClick={() => signOut({ callbackUrl: '/signin' })}
-                    color="inherit"
-                    size="small"
-                    sx={{ display: { xs: 'none', md: 'inline-flex' } }}
-                  >
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
+            </Box>
+
+            {/* Spacer to push nav/actions to the right, preserving room for the name */}
+            <Box sx={{ flex: 1 }} />
+
+            {/* Role-based navigation */}
+            {authed && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  mt: { xs: 0, sm: -0.5 },
+                  '@media print': { display: 'none' },
+                }}
+              >
+                {isEmployee && <EmployeeTopNav />}
+                {isManagerRole && <ManagerTopNav />}
+                {isOwner && <OwnerTopNav />}
+                {isAdmin && <AdminTopNav />}
+              </Box>
+            )}
+
+            {/* Fallback for unauthenticated users */}
+            {!authed && !path?.startsWith('/signin') && !path?.startsWith('/signup') && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  ml: 'auto',
+                  '@media print': { display: 'none' },
+                }}
+              >
                 <Button href="/signin" variant="contained" size="small">
                   Sign In
                 </Button>
-              )}
-            </Box>
+              </Box>
+            )}
+
+            {/* Additional components for authenticated users */}
+            {authed && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  mt: { xs: 0, sm: -0.5 },
+                  '@media print': { display: 'none' },
+                }}
+              >
+                <ReadonlyBypassToggle />
+                <UpgradeChip />
+                {isManager && <ManagerSettingsMenu />}
+                {/* Mobile hamburger moved to the right of the notification bell */}
+                <IconButton
+                  color="inherit"
+                  size="small"
+                  aria-label="menu"
+                  onClick={() => setMobileMenuOpen(true)}
+                  sx={{ display: { xs: 'inline-flex', md: 'none' }, ml: 0.5 }}
+                >
+                  <MenuIcon />
+                </IconButton>
+              </Box>
+            )}
           </Toolbar>
         </AppBar>
+
         <Drawer
+          sx={{ '@media print': { display: 'none' } }}
           anchor="right"
           open={mobileMenuOpen}
           onClose={() => setMobileMenuOpen(false)}
@@ -338,89 +329,170 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMobileMenuOpen(false)}
           >
             <List>
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/dashboard`)}>
-                <ListItemIcon>
-                  <HomeIcon />
-                </ListItemIcon>
-                <ListItemText primary="Dashboard" />
-              </ListItemButton>
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/schedule`)}>
-                <ListItemIcon>
-                  <ViewWeekIcon />
-                </ListItemIcon>
-                <ListItemText primary="Schedule" />
-              </ListItemButton>
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/people`)}>
-                <ListItemIcon>
-                  <PeopleIcon />
-                </ListItemIcon>
-                <ListItemText primary="People" />
-              </ListItemButton>
+              {/* Employee Mobile Navigation */}
+              {isEmployee && (
+                <>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/dashboard`)}>
+                    <ListItemIcon>
+                      <HomeIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Dashboard" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/myschedule`)}>
+                    <ListItemIcon>
+                      <ViewWeekIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Schedule" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/availability`)}>
+                    <ListItemIcon>
+                      <PeopleIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Availability" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                </>
+              )}
 
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/reports`)}>
-                <ListItemIcon>
-                  <AnalyticsIcon />
-                </ListItemIcon>
-                <ListItemText primary="Reports" />
-              </ListItemButton>
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/directory`)}>
-                <ListItemIcon>
-                  <PeopleIcon />
-                </ListItemIcon>
-                <ListItemText primary="Directory" />
-              </ListItemButton>
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/swaps`)}>
-                <ListItemIcon>
-                  <SwapHorizIcon />
-                </ListItemIcon>
-                <ListItemText primary="Swaps" />
-              </ListItemButton>
+              {/* Manager Mobile Navigation */}
+              {isManagerRole && (
+                <>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/dashboard`)}>
+                    <ListItemIcon>
+                      <HomeIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Dashboard" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/schedule`)}>
+                    <ListItemIcon>
+                      <ViewWeekIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Schedule" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/people`)}>
+                    <ListItemIcon>
+                      <PeopleIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="People" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/swaps`)}>
+                    <ListItemIcon>
+                      <SwapHorizIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Swaps" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/announcements`)}>
+                    <ListItemIcon>
+                      <CampaignIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Announcements" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                </>
+              )}
 
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/wizard`)}>
-                <ListItemIcon>
-                  <AutoFixHighIcon />
-                </ListItemIcon>
-                <ListItemText primary="Wizard" />
-              </ListItemButton>
-              <ListItemButton onClick={() => router.push(`/org/${orgId}/announcements`)}>
-                <ListItemIcon>
-                  <CampaignIcon />
-                </ListItemIcon>
-                <ListItemText primary="Announcements" />
-              </ListItemButton>
+              {/* Owner Mobile Navigation */}
+              {isOwner && (
+                <>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/dashboard`)}>
+                    <ListItemIcon>
+                      <HomeIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Dashboard" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/schedule`)}>
+                    <ListItemIcon>
+                      <ViewWeekIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Schedule" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/people`)}>
+                    <ListItemIcon>
+                      <PeopleIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="People" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/reports`)}>
+                    <ListItemIcon>
+                      <AnalyticsIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Reports" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/announcements`)}>
+                    <ListItemIcon>
+                      <CampaignIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Announcements" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                </>
+              )}
+
+              {/* Admin Mobile Navigation */}
+              {isAdmin && (
+                <>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/dashboard`)}>
+                    <ListItemIcon>
+                      <HomeIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Dashboard" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/accounts`)}>
+                    <ListItemIcon>
+                      <CreditCardIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Accounts" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                  <ListItemButton onClick={() => router.push(`/org/${orgId}/reports`)}>
+                    <ListItemIcon>
+                      <AnalyticsIcon sx={{ color: '#6b7280' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Reports" sx={{ color: '#1f2937' }} />
+                  </ListItemButton>
+                </>
+              )}
             </List>
             <Box sx={{ flexGrow: 1 }} />
-            <Divider />
-            <List>
-              <ListItemButton onClick={() => signOut({ callbackUrl: '/signin' })}>
-                <ListItemIcon>
-                  <LogoutIcon />
-                </ListItemIcon>
-                <ListItemText primary="Sign Out" />
-              </ListItemButton>
-            </List>
           </Box>
         </Drawer>
-        {/* Employee mobile menu removed */}
-        <SuspendedBanner />
-        <SuspendedGate />
-        <PinnedAnnouncement />
+
+        <Box sx={{ '@media print': { display: 'none' } }}>
+          <SuspendedBanner />
+          <SuspendedGate />
+          <PinnedAnnouncement />
+        </Box>
 
         <Container
           disableGutters
-          sx={{ py: 2, px: 1, pb: { xs: 8, md: 2 } }}
+          sx={{
+            py: 2,
+            px: isSchedulePage ? 0 : 1,
+            pb: { xs: 8, md: 2 },
+            '@media print': { py: 0, px: 0, pb: 0 },
+          }}
           maxWidth={
             isCoveragePage || isSchedulePage || isShiftsPage || isPositionsPage ? false : 'xl'
           }
         >
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-            {showManagerSideNav && <ManagerSideNav />}
-            <Box sx={{ flex: 1, width: '100%' }}>{children}</Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              // On Schedule page, use a precise 1px left margin on content instead of flex gap
+              gap: isSchedulePage ? 0 : 2,
+            }}
+          >
+            <Box sx={{ '@media print': { display: 'none' } }}>
+              {showManagerSideNav && <ManagerSideNav />}
+            </Box>
+            <Box sx={{ flex: 1, width: '100%', ml: isSchedulePage ? '10px' : 0 }}>{children}</Box>
           </Box>
         </Container>
+
         {/* Mobile bottom navigation for managers */}
-        {showManagerTopNav && isMobile && <ManagerNav />}
-        <RateLimitToast />
+        <Box sx={{ '@media print': { display: 'none' } }}>
+          {(isManagerRole || isOwner) && isMobile && <ManagerNav />}
+        </Box>
+        <Box sx={{ '@media print': { display: 'none' } }}>
+          <RateLimitToast />
+        </Box>
       </Box>
       <ReadOnlyStyles />
     </>

@@ -47,20 +47,39 @@ export const authOptions: NextAuthOptions = {
           const email = String((creds as any)?.email || '').toLowerCase();
           const password = String((creds as any)?.password || '');
           if (!email || !password) return null;
+
+          console.log(`[AUTH] Attempting password auth for email: ${email}`);
+
           await dbConnect();
           const u: any = await (User as any)
             .findOne({ email })
             .select('email orgId roles passwordHash');
-          if (!u || !u.passwordHash) return null;
+
+          if (!u) {
+            console.log(`[AUTH] User not found for email: ${email}`);
+            return null;
+          }
+
+          if (!u.passwordHash) {
+            console.log(`[AUTH] User found but no password hash for email: ${email}`);
+            return null;
+          }
+
           const hash = crypto.createHash('sha256').update(password).digest('hex');
-          if (hash !== u.passwordHash) return null;
+          const passwordMatch = hash === u.passwordHash;
+
+          console.log(`[AUTH] Password match: ${passwordMatch} for email: ${email}`);
+
+          if (!passwordMatch) return null;
+
           return {
             id: String(u._id),
             email: u.email,
             orgId: String(u.orgId || ''),
             roles: u.roles || ['EMPLOYEE'],
           } as any;
-        } catch {
+        } catch (error) {
+          console.error('[AUTH] Error in password authorize:', error);
           return null;
         }
       },

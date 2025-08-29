@@ -47,15 +47,26 @@ export default function ManagerSideNav() {
         position: 'sticky',
         top: (theme) => (Number((theme.mixins.toolbar as any)?.minHeight) || 64) + 8,
         alignSelf: 'flex-start',
-        width: collapsed ? 56 : { xs: 56, md: 260 },
+        // Tighter expanded width: hug link content on md+ screens
+        width: collapsed ? 56 : { xs: 56, md: 'max-content' },
       }}
     >
-      <Paper sx={{ p: 1, minHeight: 'calc(100vh - 80px)' }}>
+      <Paper
+        sx={{
+          p: 1,
+          minHeight: 'calc(100vh - 80px)',
+          bgcolor: '#fff',
+          border: '1px solid #f3f4f6',
+          borderRadius: 2,
+          width: 'max-content',
+        }}
+      >
         <Box sx={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end' }}>
           <IconButton
             size="small"
             onClick={toggleCollapsed}
             aria-label={collapsed ? 'Expand' : 'Collapse'}
+            sx={{ color: '#6b7280' }}
           >
             {collapsed ? (
               <ChevronRightIcon fontSize="small" />
@@ -71,6 +82,11 @@ export default function ManagerSideNav() {
             '& .MuiListItemButton-root': {
               px: 1,
               justifyContent: collapsed ? 'center' : { xs: 'center', md: 'flex-start' },
+              borderRadius: 1,
+              mb: 0.5,
+              '&:hover': {
+                bgcolor: '#f9fafb',
+              },
             },
             '& .MuiListItemText-root': {
               display: collapsed ? 'none' : { xs: 'none', md: 'block' },
@@ -79,47 +95,98 @@ export default function ManagerSideNav() {
         >
           <ListItemButton component={Link} href={`/org/${orgId}/schedule`}>
             <ListItemIcon>
-              <CalendarMonthIcon fontSize="small" />
+              <CalendarMonthIcon fontSize="small" sx={{ color: '#6b7280' }} />
             </ListItemIcon>
-            <ListItemText primary="Schedule" />
+            <ListItemText
+              primary="Schedule"
+              primaryTypographyProps={{
+                color: '#1f2937',
+                fontWeight: 400,
+                fontSize: '0.875rem',
+              }}
+            />
           </ListItemButton>
           <ListItemButton component={Link} href={`/org/${orgId}/positions`}>
             <ListItemIcon>
-              <WorkOutlineIcon fontSize="small" />
+              <WorkOutlineIcon fontSize="small" sx={{ color: '#6b7280' }} />
             </ListItemIcon>
-            <ListItemText primary="Positions" />
+            <ListItemText
+              primary="Positions"
+              primaryTypographyProps={{
+                color: '#1f2937',
+                fontWeight: 400,
+                fontSize: '0.875rem',
+              }}
+            />
           </ListItemButton>
           <ListItemButton component={Link} href={`/org/${orgId}/shifts`}>
             <ListItemIcon>
-              <ViewWeekIcon fontSize="small" />
+              <ViewWeekIcon fontSize="small" sx={{ color: '#6b7280' }} />
             </ListItemIcon>
-            <ListItemText primary="Shifts" />
+            <ListItemText
+              primary="Shifts"
+              primaryTypographyProps={{
+                color: '#1f2937',
+                fontWeight: 400,
+                fontSize: '0.875rem',
+              }}
+            />
           </ListItemButton>
           <ListItemButton component={Link} href={`/org/${orgId}/coverage`}>
             <ListItemIcon>
-              <DashboardIcon fontSize="small" />
+              <DashboardIcon fontSize="small" sx={{ color: '#6b7280' }} />
             </ListItemIcon>
-            <ListItemText primary="Coverage" />
-          </ListItemButton>
-          <ListItemButton component={Link} href={`/org/${orgId}/policy`}>
-            <ListItemIcon>
-              <PolicyIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Policy" />
-          </ListItemButton>
-          <ListItemButton component={Link} href={`/org/${orgId}/holidays`}>
-            <ListItemIcon>
-              <EventAvailableIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Holidays" />
+            <ListItemText
+              primary="Coverage"
+              primaryTypographyProps={{
+                color: '#1f2937',
+                fontWeight: 400,
+                fontSize: '0.875rem',
+              }}
+            />
           </ListItemButton>
           {isOwnerOrAdmin && (
-            <ListItemButton component={Link} href={`/org/${orgId}/org-settings`}>
-              <ListItemIcon>
-                <SettingsIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Org Settings" />
-            </ListItemButton>
+            <>
+              <ListItemButton component={Link} href={`/org/${orgId}/policy`}>
+                <ListItemIcon>
+                  <PolicyIcon fontSize="small" sx={{ color: '#6b7280' }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Policy"
+                  primaryTypographyProps={{
+                    color: '#1f2937',
+                    fontWeight: 400,
+                    fontSize: '0.875rem',
+                  }}
+                />
+              </ListItemButton>
+              <ListItemButton component={Link} href={`/org/${orgId}/holidays`}>
+                <ListItemIcon>
+                  <EventAvailableIcon fontSize="small" sx={{ color: '#6b7280' }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Holidays"
+                  primaryTypographyProps={{
+                    color: '#1f2937',
+                    fontWeight: 400,
+                    fontSize: '0.875rem',
+                  }}
+                />
+              </ListItemButton>
+              <ListItemButton component={Link} href={`/org/${orgId}/org-settings`}>
+                <ListItemIcon>
+                  <SettingsIcon fontSize="small" sx={{ color: '#6b7280' }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Settings"
+                  primaryTypographyProps={{
+                    color: '#1f2937',
+                    fontWeight: 400,
+                    fontSize: '0.875rem',
+                  }}
+                />
+              </ListItemButton>
+            </>
           )}
         </List>
       </Paper>

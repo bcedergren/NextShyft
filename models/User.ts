@@ -7,6 +7,7 @@ const UserSchema = new Schema(
     firstName: { type: String, default: '' },
     lastName: { type: String, default: '' },
     roles: [String],
+    positions: { type: [Schema.Types.ObjectId], index: true, default: [] },
     passwordHash: { type: String, default: '' },
     reset: {
       token: { type: String, default: '' },

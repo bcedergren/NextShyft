@@ -3,12 +3,14 @@ import { ReactNode, createContext, useMemo, useState, useEffect } from 'react';
 import { SessionProvider } from 'next-auth/react';
 import ToastProvider from '@/components/ToastProvider';
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { darkTheme, lightTheme } from '@/styles/theme';
+import { darkTheme, lightTheme, nextShyftTheme } from '@/styles/theme';
+import { usePathname } from 'next/navigation';
 
 export const ColorModeContext = createContext({ toggle: () => {} });
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<'dark' | 'light'>('dark');
+  const [mode, setMode] = useState<'dark' | 'light'>('light');
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -29,7 +31,8 @@ export default function Providers({ children }: { children: ReactNode }) {
     [],
   );
 
-  const theme = mode === 'dark' ? darkTheme : lightTheme;
+  // Use NextShyft theme for the landing page, existing theme for other pages
+  const theme = pathname === '/' ? nextShyftTheme : mode === 'dark' ? darkTheme : lightTheme;
 
   return (
     <SessionProvider>

@@ -2,8 +2,8 @@
 import { createTheme } from '@mui/material/styles';
 
 export const palette = {
-  primary: { main: '#6C63FF' },
-  secondary: { main: '#00BFA6' },
+  primary: { main: '#1f2937' }, // Updated to match new design
+  secondary: { main: '#6b7280' }, // Updated to match new design
   success: { main: '#2E7D32' },
   warning: { main: '#ED6C02' },
   error: { main: '#D32F2F' },
@@ -11,13 +11,100 @@ export const palette = {
   paperDark: '#12172B',
 };
 
+// New minimal NextShyft theme
+export const nextShyftTheme = createTheme({
+  palette: {
+    primary: { main: '#1f2937' },
+    secondary: { main: '#6b7280' },
+    text: {
+      primary: '#1f2937',
+      secondary: '#6b7280',
+    },
+    background: {
+      default: '#fff',
+      paper: '#f9fafb',
+    },
+    divider: '#f3f4f6',
+  },
+  shape: { borderRadius: 8 },
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      'Segoe UI',
+      'Roboto',
+      'Oxygen',
+      'Ubuntu',
+      'Cantarell',
+      'sans-serif',
+    ].join(','),
+    h1: { fontWeight: 200 },
+    h2: { fontWeight: 300 },
+    h3: { fontWeight: 400 },
+    h4: { fontWeight: 300 },
+    h5: { fontWeight: 300 },
+    h6: { fontWeight: 300 },
+    body1: { fontWeight: 400 },
+    body2: { fontWeight: 400 },
+    button: { fontWeight: 500 },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+          fontWeight: 500,
+        },
+        contained: {
+          '&:hover': {
+            backgroundColor: '#111827',
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          border: '1px solid #f3f4f6',
+        },
+      },
+    },
+  },
+});
+
 export const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: { main: palette.primary.main },
     secondary: { main: palette.secondary.main },
+    background: {
+      default: '#fff',
+      paper: '#f9fafb',
+    },
+    text: {
+      primary: '#1f2937',
+      secondary: '#6b7280',
+    },
   },
-  typography: { fontFamily: 'Inter, system-ui, Arial, sans-serif' },
+  typography: {
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+    fontWeightLight: 200,
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+        },
+      },
+    },
+  },
 });
 
 export const darkTheme = createTheme({
@@ -27,27 +114,19 @@ export const darkTheme = createTheme({
     secondary: { main: palette.secondary.main },
     background: { default: palette.backgroundDark, paper: palette.paperDark },
   },
-  typography: { fontFamily: 'Inter, system-ui, Arial, sans-serif' },
+  typography: {
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+    fontWeightLight: 200,
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+  },
   components: {
-    MuiLink: {
+    MuiButton: {
       styleOverrides: {
         root: {
-          color: palette.primary.main,
-          '&:visited': { color: palette.primary.main },
-          '&:hover': { color: '#8F89FF', textDecorationColor: '#8F89FF' },
-          textDecorationColor: palette.primary.main,
-        },
-      },
-    },
-    MuiTypography: {
-      styleOverrides: {
-        root: {
-          '&[href]': {
-            color: palette.primary.main,
-            textDecoration: 'underline',
-            textDecorationColor: palette.primary.main,
-            '&:hover': { color: '#8F89FF', textDecorationColor: '#8F89FF' },
-          },
+          textTransform: 'none',
+          borderRadius: 8,
         },
       },
     },

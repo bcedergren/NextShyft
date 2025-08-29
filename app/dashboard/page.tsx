@@ -1,19 +1,21 @@
 'use client';
 import PushOptIn from '@/components/PushOptIn';
 import AppShell from '@/components/AppShell';
+import { PageHeader, PageLayout } from '@/components/page';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Box,
   Card,
   CardContent,
-  Grid,
-  Typography,
+  Paper,
   Stack,
+  Typography,
   List,
   ListItem,
   ListItemText,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import TodayIcon from '@mui/icons-material/Today';
 import DateRangeIcon from '@mui/icons-material/DateRange';
@@ -42,6 +44,8 @@ export default function Dashboard() {
     hasUnpublishedChanges?: boolean;
     publishedAt?: string | null;
   } | null>(null);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>('default');
 
   // Redirect bare /dashboard to org-scoped dashboard only if the user has an org
   useEffect(() => {
@@ -50,6 +54,28 @@ export default function Dashboard() {
       router.replace(`/org/${orgId}/dashboard`);
     }
   }, [pathname, orgId, router]);
+
+  // Request notification permission on initial page load
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      // Show a subtle notification permission request
+      const requestPermission = async () => {
+        try {
+          const permission = await Notification.requestPermission();
+          setNotificationPermission(permission);
+        } catch (error) {
+          console.log('Notification permission request failed:', error);
+        }
+      };
+
+      // Delay the request slightly to not interrupt the initial page load
+      const timer = setTimeout(() => {
+        requestPermission();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Managers can now view the dashboard; remove other redirects
 
@@ -100,183 +126,249 @@ export default function Dashboard() {
               (s) => new Date(s.date).toISOString().slice(0, 10) === todayStr,
             );
             setTodayShifts(todays);
-            const range = getCurrentWeekRange(today);
-            const withinWeek = list.filter((s) => {
-              const d = new Date(s.date);
-              return d >= range.start && d <= range.end;
-            });
-            setWeekShifts(withinWeek);
+            // Get this week's shifts
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            const thisWeek = list.filter(
+              (s) => new Date(s.date) >= weekStart && new Date(s.date) <= weekEnd,
+            );
+            setWeekShifts(thisWeek);
           });
-        // Announcements preview
+        // Load announcements
         fetch('/api/announcements')
           .then((r) => r.json())
-          .then((list: AnnouncementItem[]) => {
-            const sorted = [...list].sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
-            );
-            setAnnouncements(sorted.slice(0, 3));
+          .then((list) => {
+            const recent = list
+              .filter(
+                (x: any) =>
+                  x.pinned ||
+                  new Date(x.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+              )
+              .slice(0, 3);
+            setAnnouncements(recent);
           });
       } catch {}
     })();
-  }, []);
+  }, [isManager]);
 
-  const weekHours = useMemo(
-    () => weekShifts.reduce((acc, s) => acc + hoursBetween(s.start, s.end), 0),
-    [weekShifts],
-  );
+  if (!session) return null;
 
   return (
     <AppShell>
-      {isManager && (
-        <>
-          <Stack spacing={1} sx={{ mb: 2 }}>
-            <Typography variant="h5">Manager Dashboard</Typography>
-            <Typography variant="body1" color="text.secondary">
-              Quick overview and shortcuts for {orgName || 'your organization'}.
-            </Typography>
-          </Stack>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <PeopleAltIcon fontSize="small" color="primary" />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Pending invites
-                    </Typography>
-                  </Stack>
-                  <Typography variant="h5">{pendingInvites}</Typography>
-                  <Typography
-                    component={Link}
-                    href={`/org/${orgId}/people`}
-                    sx={{ textDecoration: 'underline' }}
-                  >
-                    Manage people
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <SwapHorizIcon fontSize="small" color="primary" />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Swap requests
-                    </Typography>
-                  </Stack>
-                  <Typography variant="h5">{pendingSwaps}</Typography>
-                  <Typography
-                    component={Link}
-                    href={`/org/${orgId}/swaps`}
-                    sx={{ textDecoration: 'underline' }}
-                  >
-                    Review swaps
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <AssessmentIcon fontSize="small" color="primary" />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Schedule status
-                    </Typography>
-                  </Stack>
-                  <Typography variant="body1">
-                    {schedStatus?.hasUnpublishedChanges ? 'Unpublished changes' : 'Up to date'}
-                  </Typography>
-                  {schedStatus?.publishedAt && (
-                    <Typography variant="caption" color="text.secondary">
-                      Last published: {new Date(schedStatus.publishedAt).toLocaleString?.()}
-                    </Typography>
-                  )}
-                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                    <Typography
-                      component={Link}
-                      href={`/org/${orgId}/schedule`}
-                      sx={{ textDecoration: 'underline' }}
-                    >
-                      Open Schedule
-                    </Typography>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <ViewWeekIcon fontSize="small" color="primary" />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Coverage
-                    </Typography>
-                  </Stack>
-                  <Typography variant="body1">Plan coverage and generate schedules.</Typography>
-                  <Typography
-                    component={Link}
-                    href={`/org/${orgId}/coverage`}
-                    sx={{ textDecoration: 'underline' }}
-                  >
-                    Open Coverage
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </>
-      )}
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-            <CampaignIcon fontSize="small" color="primary" />
-            <Typography variant="subtitle2" color="text.secondary">
+      <PageLayout spacing={4}>
+        {/* Compact Scrolling Announcements */}
+        {announcements.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="h6" fontWeight="400" sx={{ mb: 1, color: '#374151' }}>
               Announcements
             </Typography>
-          </Stack>
-          {announcements.length > 0 ? (
-            <List dense>
-              {announcements.map((a) => (
-                <ListItem key={a._id} disableGutters>
-                  <ListItemText
-                    primary={a.title}
-                    secondary={a.body}
-                    primaryTypographyProps={{ variant: 'body1' }}
-                    secondaryTypographyProps={{ variant: 'body1', color: 'text.secondary' }}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          ) : (
-            <Typography variant="body1" color="text.secondary">
-              No announcements
-            </Typography>
+            <Box
+              sx={{
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1.5,
+                  animation: 'scroll 25s linear infinite',
+                  '@keyframes scroll': {
+                    '0%': { transform: 'translateX(100%)' },
+                    '100%': { transform: 'translateX(-100%)' },
+                  },
+                  '&:hover': {
+                    animationPlayState: 'paused',
+                  },
+                }}
+              >
+                {announcements.map((ann: any) => (
+                  <Box
+                    key={ann._id}
+                    sx={{
+                      minWidth: 260,
+                      p: 1.5,
+                      bgcolor: 'grey.50',
+                      borderRadius: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight="600"
+                      color="text.primary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      {ann.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: '0.875rem' }}
+                    >
+                      {ann.body}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+        <Typography
+          variant="h5"
+          fontWeight="400"
+          sx={{
+            mb: 3,
+            color: '#374151',
+            fontSize: { xs: '1.25rem', md: '1.5rem' },
+          }}
+        >
+          Dashboard
+        </Typography>
+
+        <Stack spacing={4}>
+          {/* Quick Stats */}
+          <Box>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+              <Card
+                sx={{
+                  flex: 1,
+                  border: '1px solid #f3f4f6',
+                  borderRadius: 2,
+                  bgcolor: '#fff',
+                }}
+              >
+                <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                  <CalendarTodayIcon sx={{ fontSize: 40, color: '#6b7280', mb: 1 }} />
+                  <Typography variant="h6" fontWeight="400" sx={{ mb: 1, color: '#1f2937' }}>
+                    Next Shift
+                  </Typography>
+                  <Typography variant="body2" color="#6b7280" fontWeight="300">
+                    {nextShift}
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              <Card
+                sx={{
+                  flex: 1,
+                  border: '1px solid #f3f4f6',
+                  borderRadius: 2,
+                  bgcolor: '#fff',
+                }}
+              >
+                <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                  <TodayIcon sx={{ fontSize: 40, color: '#6b7280', mb: 1 }} />
+                  <Typography variant="h6" fontWeight="400" sx={{ mb: 1, color: '#1f2937' }}>
+                    Today's Shifts
+                  </Typography>
+                  <Typography variant="body2" color="#6b7280" fontWeight="300">
+                    {todayShifts.length} shifts
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              <Card
+                sx={{
+                  flex: 1,
+                  border: '1px solid #f3f4f6',
+                  borderRadius: 2,
+                  bgcolor: '#fff',
+                }}
+              >
+                <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                  <DateRangeIcon sx={{ fontSize: 40, color: '#6b7280', mb: 1 }} />
+                  <Typography variant="h6" fontWeight="400" sx={{ mb: 1, color: '#1f2937' }}>
+                    This Week
+                  </Typography>
+                  <Typography variant="body2" color="#6b7280" fontWeight="300">
+                    {weekShifts.length} shifts
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Box>
+
+          {/* Manager Widgets */}
+          {isManager && (
+            <Box>
+              <Typography
+                variant="h5"
+                fontWeight="400"
+                sx={{
+                  mb: 3,
+                  color: '#374151',
+                  fontSize: { xs: '1.25rem', md: '1.5rem' },
+                }}
+              >
+                Management
+              </Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                <Card
+                  sx={{
+                    flex: 1,
+                    border: '1px solid #f3f4f6',
+                    borderRadius: 2,
+                    bgcolor: '#fff',
+                  }}
+                >
+                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                    <PeopleAltIcon sx={{ fontSize: 40, color: '#6b7280', mb: 1 }} />
+                    <Typography variant="h6" fontWeight="400" sx={{ mb: 1, color: '#1f2937' }}>
+                      Pending Invites
+                    </Typography>
+                    <Typography variant="body2" color="#6b7280" fontWeight="300">
+                      {pendingInvites} invites
+                    </Typography>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  sx={{
+                    flex: 1,
+                    border: '1px solid #f3f4f6',
+                    borderRadius: 2,
+                    bgcolor: '#fff',
+                  }}
+                >
+                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                    <SwapHorizIcon sx={{ fontSize: 40, color: '#6b7280', mb: 1 }} />
+                    <Typography variant="h6" fontWeight="400" sx={{ mb: 1, color: '#1f2937' }}>
+                      Pending Swaps
+                    </Typography>
+                    <Typography variant="body2" color="#6b7280" fontWeight="300">
+                      {pendingSwaps} requests
+                    </Typography>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  sx={{
+                    flex: 1,
+                    border: '1px solid #f3f4f6',
+                    borderRadius: 2,
+                    bgcolor: '#fff',
+                  }}
+                >
+                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                    <ViewWeekIcon sx={{ fontSize: 40, color: '#6b7280', mb: 1 }} />
+                    <Typography variant="h6" fontWeight="400" sx={{ mb: 1, color: '#1f2937' }}>
+                      Schedule Status
+                    </Typography>
+                    <Typography variant="body2" color="#6b7280" fontWeight="300">
+                      {schedStatus?.hasUnpublishedChanges ? 'Has changes' : 'Up to date'}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Stack>
+            </Box>
           )}
-        </CardContent>
-      </Card>
-      {/* Removed employee dashboard summary content */}
+        </Stack>
+      </PageLayout>
     </AppShell>
   );
-
-  function getCurrentWeekRange(date: Date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const start = new Date(d);
-    start.setDate(d.getDate() - day);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
-    return { start, end };
-  }
-
-  function hoursBetween(start: string, end: string) {
-    const [sh, sm] = start.split(':').map(Number);
-    const [eh, em] = end.split(':').map(Number);
-    return eh + em / 60 - (sh + sm / 60);
-  }
 }
 
 type MyShift = { _id: string; date: string; start: string; end: string; positionName?: string };

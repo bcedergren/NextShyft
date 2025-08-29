@@ -13,6 +13,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Box,
 } from '@mui/material';
 import CoverageHeatmap from '@/components/CoverageHeatmap';
 import { useEffect, useMemo, useState } from 'react';
@@ -149,34 +150,34 @@ export default function ReportsPage() {
               {loadingStats ? 'Refreshing…' : 'Refresh Stats'}
             </Button>
           </Stack>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={6} md={3}>
+          <Stack direction="row" spacing={2} sx={{ mt: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: { xs: '1 1 calc(50% - 4px)', md: '1 1 calc(25% - 6px)' } }}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6">{coveragePct}%</Typography>
                 <Typography variant="caption">Coverage rate</Typography>
               </Paper>
-            </Grid>
-            <Grid item xs={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 calc(50% - 4px)', md: '1 1 calc(25% - 6px)' } }}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6">
                   {Math.max(0, stats.shiftCount - stats.coveredCount)}
                 </Typography>
                 <Typography variant="caption">Unfilled shifts</Typography>
               </Paper>
-            </Grid>
-            <Grid item xs={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 calc(50% - 4px)', md: '1 1 calc(25% - 6px)' } }}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6">{stats.staffCount}</Typography>
                 <Typography variant="caption">Active staff</Typography>
               </Paper>
-            </Grid>
-            <Grid item xs={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 calc(50% - 4px)', md: '1 1 calc(25% - 6px)' } }}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6">{stats.openSwaps}</Typography>
                 <Typography variant="caption">Open swap requests</Typography>
               </Paper>
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Paper>
         <Paper sx={{ p: 2, overflowX: { xs: 'auto', md: 'visible' } }}>
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>

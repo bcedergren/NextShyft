@@ -31,6 +31,9 @@ export default function JoinPage() {
           <Button variant="contained" onClick={join}>
             Join
           </Button>
+          <Button href="/signup" variant="text" sx={{ alignSelf: 'flex-start' }}>
+            Want to create a new organization? Sign up here
+          </Button>
           {ok === true && <Alert severity="success">Success! Check your email to sign in.</Alert>}
           {ok === false && <Alert severity="error">Invalid code or error. Try again.</Alert>}
         </Paper>

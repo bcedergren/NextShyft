@@ -37,8 +37,34 @@ export default function ManagerNav() {
   };
 
   return (
-    <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: (t) => t.zIndex.appBar }}>
-      <BottomNavigation value={val} onChange={handle} showLabels>
+    <Paper
+      sx={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: (t) => t.zIndex.appBar,
+        borderTop: '1px solid #f3f4f6',
+        bgcolor: '#fff',
+      }}
+    >
+      <BottomNavigation
+        value={val}
+        onChange={handle}
+        showLabels
+        sx={{
+          '& .MuiBottomNavigationAction-root': {
+            color: '#6b7280',
+            '&.Mui-selected': {
+              color: '#1f2937',
+            },
+          },
+          '& .MuiBottomNavigationAction-label': {
+            fontSize: '0.75rem',
+            fontWeight: 400,
+          },
+        }}
+      >
         <BottomNavigationAction label="Schedule" icon={<ViewWeekIcon />} />
         <BottomNavigationAction label="People" icon={<PeopleIcon />} />
         <BottomNavigationAction label="Swaps" icon={<SwapHorizIcon />} />

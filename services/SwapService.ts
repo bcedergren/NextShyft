@@ -52,7 +52,7 @@ export class SwapService {
     await this.push.send([requesterEmail], {
       title: `Swap ${status.toLowerCase()}`,
       body: 'Your swap request was processed.',
-      url: '/org/demo/me',
+      url: '/org/demo/availability',
     });
     return doc;
   }

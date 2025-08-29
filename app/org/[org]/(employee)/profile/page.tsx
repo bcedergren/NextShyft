@@ -3,6 +3,7 @@ import AppShell from '@/components/AppShell';
 // Top navigation is now provided by AppShell
 import { useSession } from 'next-auth/react';
 import {
+  Box,
   Paper,
   Stack,
   TextField,
@@ -45,7 +46,12 @@ export default function Profile() {
   return (
     <AppShell>
       <Stack spacing={2}>
-        <Typography variant="h5">Profile</Typography>
+        <Typography variant="h5">My Profile & Settings</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Manage your personal information, contact details, and notification preferences.
+        </Typography>
+        
+        
         <Paper sx={{ p: 2, width: '100%' }}>
           <TextField
             label="Name"

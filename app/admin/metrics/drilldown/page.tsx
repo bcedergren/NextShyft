@@ -2,7 +2,7 @@
 import AppShell from '@/components/AppShell';
 import OrgSearch from '@/components/OrgSearch';
 import { useEffect, useState } from 'react';
-import { Grid, Paper, Stack, Typography, TextField } from '@mui/material';
+import { Box, Paper, Stack, Typography, TextField } from '@mui/material';
 
 export default function AdminDrilldown() {
   const [data, setData] = useState<any>(null);
@@ -20,8 +20,8 @@ export default function AdminDrilldown() {
           <OrgSearch />
         </Paper>
         <Typography variant="h5">Super Admin — Drilldowns</Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 4px)' } }}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="subtitle1">Top Orgs by Users</Typography>
               <TextField
@@ -78,8 +78,8 @@ export default function AdminDrilldown() {
                 ))}
               </Stack>
             </Paper>
-          </Grid>
-          <Grid item xs={12} md={6}>
+          </Box>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 4px)' } }}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="subtitle1">Top Active Users (30d by notifications)</Typography>
               <Stack spacing={1} sx={{ mt: 1 }}>
@@ -91,8 +91,8 @@ export default function AdminDrilldown() {
                 ))}
               </Stack>
             </Paper>
-          </Grid>
-        </Grid>
+          </Box>
+        </Stack>
       </Stack>
     </AppShell>
   );
