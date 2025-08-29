@@ -212,7 +212,13 @@ export default function PeoplePage() {
                         <Chip label={inv.role} size="small" sx={{ width: 120 }} />
                         <Chip
                           label={inv.status || 'PENDING'}
-                          color={inv.status === 'ACCEPTED' ? 'success' : inv.status === 'EXPIRED' ? 'default' : 'warning'}
+                          color={
+                            inv.status === 'ACCEPTED'
+                              ? 'success'
+                              : inv.status === 'EXPIRED'
+                                ? 'default'
+                                : 'warning'
+                          }
                           size="small"
                           sx={{ width: 120 }}
                         />
