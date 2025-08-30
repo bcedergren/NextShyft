@@ -35,8 +35,21 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const roles = ((session as any)?.roles || []) as string[];
-  const orgId = ((session as any)?.orgId as string) || null;
+  // Support demo/mock session when NextAuth session is not present
+  const mock = (() => {
+    if (typeof document === 'undefined') return null;
+    try {
+      const m = document.cookie.match(/__mocksession=([^;]+)/);
+      if (!m) return null;
+      return JSON.parse(decodeURIComponent(m[1]));
+    } catch {
+      return null;
+    }
+  })();
+  const roles = (((session as any)?.roles || (mock?.roles as string[]) || []) as string[]).map(
+    (r) => String(r).toUpperCase(),
+  );
+  const orgId = ((session as any)?.orgId as string) || (mock?.orgId as string) || null;
   const isManager = roles.some((r) => ['MANAGER', 'OWNER', 'ADMIN', 'SUPERADMIN'].includes(r));
   const [pendingInvites, setPendingInvites] = useState<number>(0);
   const [pendingSwaps, setPendingSwaps] = useState<number>(0);
@@ -54,6 +67,17 @@ export default function Dashboard() {
       router.replace(`/org/${orgId}/dashboard`);
     }
   }, [pathname, orgId, router]);
+
+  // If user is not in a manager-like role, route them to their primary home instead of dashboard
+  useEffect(() => {
+    if (!orgId) return;
+    if (isManager) return;
+    const p = pathname || '';
+    const isOnDashboard = p === '/dashboard' || /\/org\/[^/]+\/dashboard$/.test(p);
+    if (isOnDashboard) {
+      router.replace(`/org/${orgId}/myschedule`);
+    }
+  }, [isManager, orgId, pathname, router]);
 
   // Request notification permission on initial page load
   useEffect(() => {
@@ -152,8 +176,6 @@ export default function Dashboard() {
       } catch {}
     })();
   }, [isManager]);
-
-  if (!session) return null;
 
   return (
     <AppShell>

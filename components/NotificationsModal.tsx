@@ -32,8 +32,10 @@ export default function NotificationsModal({
 }) {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   const load = async () => {
+    if (isDemo) return; // disable in demo mode
     setLoading(true);
     try {
       const list = await (await fetch('/api/notifications', { cache: 'no-store' })).json();
@@ -44,10 +46,15 @@ export default function NotificationsModal({
   };
 
   useEffect(() => {
-    if (open) load();
-  }, [open]);
+    try {
+      const hasDemo = typeof document !== 'undefined' && /__demosession=/.test(document.cookie);
+      setIsDemo(!!hasDemo);
+    } catch {}
+    if (open && !isDemo) load();
+  }, [open, isDemo]);
 
   const markAll = async () => {
+    if (isDemo) return;
     await fetch('/api/notifications', { method: 'PUT' });
     load();
   };
@@ -60,13 +67,18 @@ export default function NotificationsModal({
       <DialogContent dividers>
         <Stack spacing={2}>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Button onClick={markAll} size="small" disabled={loading}>
+            <Button onClick={markAll} size="small" disabled={loading || isDemo}>
               Mark all as read
             </Button>
-            <Button onClick={load} size="small" disabled={loading}>
+            <Button onClick={load} size="small" disabled={loading || isDemo}>
               Refresh
             </Button>
           </Stack>
+          {isDemo && (
+            <Typography variant="body2" color="text.secondary">
+              Notifications are disabled in demo mode.
+            </Typography>
+          )}
           {selected ? (
             <Stack spacing={1}>
               <Typography variant="subtitle1">{selected.title}</Typography>
@@ -95,7 +107,7 @@ export default function NotificationsModal({
             ))}
             {items.length === 0 && (
               <Typography variant="body2" color="text.secondary">
-                No notifications
+                {isDemo ? 'Notifications are disabled in demo mode.' : 'No notifications'}
               </Typography>
             )}
           </List>

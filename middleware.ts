@@ -13,6 +13,7 @@ function isPublicPath(pathname: string) {
     pathname.startsWith('/signup') ||
     pathname.startsWith('/reset') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/demo') ||
     pathname.startsWith('/api/test/login') ||
     pathname.startsWith('/api/test/logout') ||
     pathname.startsWith('/api/signup') ||
@@ -51,6 +52,11 @@ export default withAuth(
         ) {
           return true;
         }
+        // Enable demo tester auto-login when both demo session and mock session cookies exist
+        // This avoids redirecting to /signin after using /api/demo/session/start and /api/test/login
+        const hasDemoSession = Boolean(req.cookies.get('__demosession')?.value);
+        const hasMockSession = Boolean(req.cookies.get('__mocksession')?.value);
+        if (hasDemoSession && hasMockSession) return true;
         if (isPublicPath(pathname)) return true;
         // Require authentication for all matched routes not explicitly public
         return !!token;

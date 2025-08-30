@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { dbConnect } from '@/lib/db';
+import DemoSession from '@/models/DemoSession';
 
 type MockSession = {
   email: string;
@@ -20,6 +22,21 @@ export async function GET(req: Request) {
     .map((r) => r.trim())
     .filter(Boolean);
   const orgId = url.searchParams.get('orgId') || 'e2e-org';
+  // In production, only allow test login if one of the following is true:
+  // - Explicit override via ALLOW_DEMO_TEST_LOGIN=1
+  // - A demo session cookie exists AND the orgId matches the configured demo org
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEMO_TEST_LOGIN !== '1') {
+    const cookieStr = req.headers.get('cookie') || '';
+    const match = /__demosession=([^;]+)/.exec(cookieStr);
+    const sessionId = match ? decodeURIComponent(match[1]) : '';
+    if (!sessionId)
+      return NextResponse.json({ ok: false, error: 'TEST_LOGIN_DISABLED' }, { status: 403 });
+    await dbConnect();
+    const ds = await (DemoSession as any)
+      .findOne({ sessionId, orgId, claimedAt: { $exists: false } })
+      .select('_id');
+    if (!ds) return NextResponse.json({ ok: false, error: 'TEST_LOGIN_DISABLED' }, { status: 403 });
+  }
   const res = NextResponse.json({ ok: true, email, roles, orgId });
   res.headers.append('Set-Cookie', setMockCookie({ email, roles, orgId }));
   return res;
@@ -36,6 +53,19 @@ export async function POST(req: Request) {
           .map((r) => r.trim())
           .filter(Boolean);
     const orgId = (body?.orgId && String(body.orgId)) || 'e2e-org';
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEMO_TEST_LOGIN !== '1') {
+      const cookieStr = req.headers.get('cookie') || '';
+      const match = /__demosession=([^;]+)/.exec(cookieStr);
+      const sessionId = match ? decodeURIComponent(match[1]) : '';
+      if (!sessionId)
+        return NextResponse.json({ ok: false, error: 'TEST_LOGIN_DISABLED' }, { status: 403 });
+      await dbConnect();
+      const ds = await (DemoSession as any)
+        .findOne({ sessionId, orgId, claimedAt: { $exists: false } })
+        .select('_id');
+      if (!ds)
+        return NextResponse.json({ ok: false, error: 'TEST_LOGIN_DISABLED' }, { status: 403 });
+    }
     const res = NextResponse.json({ ok: true, email, roles, orgId });
     res.headers.append('Set-Cookie', setMockCookie({ email, roles, orgId }));
     return res;

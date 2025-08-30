@@ -1,0 +1,53 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Create minimal env
+        run: |
+          cp .env.example .env.local 2>/dev/null || true
+          echo "NEXTAUTH_SECRET=$(node -e \"console.log(require('crypto').randomBytes(16).toString('hex'))\")" >> .env.local
+          echo "NEXT_PUBLIC_DEMO_MODE=1" >> .env.local
+          echo "NEXT_PUBLIC_DEMO_ORG_ID=689e3862cd3e503e177a5715" >> .env.local
+          echo "MONGODB_URI=mongodb://127.0.0.1:27017/nextshyft_e2e?directConnection=true" >> .env.local
+
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.10.0
+        with:
+          mongodb-version: '6.0'
+
+      - name: Seed optional demo data (best-effort)
+        run: |
+          npx tsx scripts/seed-dashboard.ts || true
+          npx tsx scripts/seed.ts || true
+
+      - name: Start dev server
+        run: |
+          nohup npm run dev >/dev/null 2>&1 &
+          npx wait-on http://localhost:3000
+
+      - name: Run Playwright tests
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: npm run e2e

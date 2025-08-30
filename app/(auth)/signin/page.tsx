@@ -2,7 +2,7 @@
 import AppShell from '../../../components/AppShell';
 import { Alert, Button, Stack, TextField, Typography, Box, Container, Paper } from '@mui/material';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useRef } from 'react';
 import { signIn } from 'next-auth/react';
 
 function SignInInner() {
@@ -11,8 +11,7 @@ function SignInInner() {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [resetMsg, setResetMsg] = useState<string | null>(null);
-  const [resetErr, setResetErr] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
   const params = useSearchParams();
   const router = useRouter();
   const callbackUrl = params.get('callbackUrl') || '/dashboard';
@@ -56,27 +55,7 @@ function SignInInner() {
     }
   };
 
-  const forgot = async () => {
-    if (!email || submitting) return;
-    setSubmitting(true);
-    setResetMsg(null);
-    setResetErr(null);
-    try {
-      const res = await fetch('/api/auth/password/forgot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setResetMsg('Password reset link sent. Check your email.');
-      } else {
-        setResetErr(data?.error || 'Failed to send reset email');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // Inline forgot password flow removed; use dedicated form at /forgot
 
   return (
     <AppShell>
@@ -90,7 +69,6 @@ function SignInInner() {
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
           }}
         >
-
           <Stack spacing={4} alignItems="center">
             <Typography
               variant="h3"
@@ -127,32 +105,6 @@ function SignInInner() {
                 Check your email for a magic link to sign in.
               </Alert>
             )}
-            {resetMsg && (
-              <Alert
-                severity="success"
-                sx={{
-                  width: '100%',
-                  bgcolor: '#f0fdf4',
-                  color: '#166534',
-                  border: '1px solid #bbf7d0',
-                }}
-              >
-                {resetMsg}
-              </Alert>
-            )}
-            {resetErr && (
-              <Alert
-                severity="error"
-                sx={{
-                  width: '100%',
-                  bgcolor: '#fef2f2',
-                  color: '#dc2626',
-                  border: '1px solid #fecaca',
-                }}
-              >
-                {resetErr}
-              </Alert>
-            )}
             {errorMsg && (
               <Alert
                 severity="error"
@@ -184,6 +136,7 @@ function SignInInner() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  inputRef={emailRef}
                   fullWidth
                   placeholder="Enter your email address"
                   sx={{
@@ -274,15 +227,16 @@ function SignInInner() {
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'space-between' }}>
-              <Button
-                onClick={forgot}
-                variant="text"
-                size="small"
-                disabled={!email || submitting}
-                sx={{ color: '#6b7280', fontWeight: 400 }}
-              >
-                Forgot password?
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  href="/forgot"
+                  variant="text"
+                  size="small"
+                  sx={{ color: '#6b7280', fontWeight: 400 }}
+                >
+                  Forgot password?
+                </Button>
+              </Box>
               <Button
                 href="/signup"
                 variant="text"

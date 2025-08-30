@@ -2,9 +2,10 @@
 import { createTheme } from '@mui/material/styles';
 
 export const palette = {
-  primary: { main: '#1f2937' }, // Updated to match new design
-  secondary: { main: '#6b7280' }, // Updated to match new design
-  success: { main: '#2E7D32' },
+  primary: { main: '#1f2937' }, // slate-800/900
+  secondary: { main: '#6b7280' }, // slate-500
+  info: { main: '#0284c7', hover: '#0ea5e9' }, // sky-600/500
+  success: { main: '#059669', hover: '#10b981' }, // emerald-600/500
   warning: { main: '#ED6C02' },
   error: { main: '#D32F2F' },
   backgroundDark: '#0B1020',
@@ -16,6 +17,8 @@ export const nextShyftTheme = createTheme({
   palette: {
     primary: { main: '#1f2937' },
     secondary: { main: '#6b7280' },
+    info: { main: palette.info.main },
+    success: { main: palette.success.main },
     text: {
       primary: '#1f2937',
       secondary: '#6b7280',
@@ -57,9 +60,22 @@ export const nextShyftTheme = createTheme({
           fontWeight: 500,
         },
         contained: {
-          '&:hover': {
-            backgroundColor: '#111827',
-          },
+          '&:hover': { backgroundColor: '#111827' },
+        },
+        containedInfo: {
+          color: '#fff',
+          backgroundColor: palette.info.main,
+          '&:hover': { backgroundColor: palette.info.hover },
+        },
+        containedSuccess: {
+          color: '#fff',
+          backgroundColor: palette.success.main,
+          '&:hover': { backgroundColor: palette.success.hover },
+        },
+        containedInherit: {
+          color: '#fff',
+          backgroundColor: '#0f172a', // slate-900
+          '&:hover': { backgroundColor: '#1f2937' }, // slate-800
         },
       },
     },
@@ -79,6 +95,8 @@ export const lightTheme = createTheme({
     mode: 'light',
     primary: { main: palette.primary.main },
     secondary: { main: palette.secondary.main },
+    info: { main: palette.info.main },
+    success: { main: palette.success.main },
     background: {
       default: '#fff',
       paper: '#f9fafb',
@@ -102,6 +120,21 @@ export const lightTheme = createTheme({
           textTransform: 'none',
           borderRadius: 8,
         },
+        containedInfo: {
+          color: '#fff',
+          backgroundColor: palette.info.main,
+          '&:hover': { backgroundColor: palette.info.hover },
+        },
+        containedSuccess: {
+          color: '#fff',
+          backgroundColor: palette.success.main,
+          '&:hover': { backgroundColor: palette.success.hover },
+        },
+        containedInherit: {
+          color: '#fff',
+          backgroundColor: '#0f172a',
+          '&:hover': { backgroundColor: '#1f2937' },
+        },
       },
     },
   },
@@ -112,6 +145,8 @@ export const darkTheme = createTheme({
     mode: 'dark',
     primary: { main: palette.primary.main },
     secondary: { main: palette.secondary.main },
+    info: { main: palette.info.main },
+    success: { main: palette.success.main },
     background: { default: palette.backgroundDark, paper: palette.paperDark },
   },
   typography: {
@@ -127,6 +162,21 @@ export const darkTheme = createTheme({
         root: {
           textTransform: 'none',
           borderRadius: 8,
+        },
+        containedInfo: {
+          color: '#fff',
+          backgroundColor: palette.info.main,
+          '&:hover': { backgroundColor: palette.info.hover },
+        },
+        containedSuccess: {
+          color: '#fff',
+          backgroundColor: palette.success.main,
+          '&:hover': { backgroundColor: palette.success.hover },
+        },
+        containedInherit: {
+          color: '#fff',
+          backgroundColor: '#0f172a',
+          '&:hover': { backgroundColor: '#1f2937' },
         },
       },
     },

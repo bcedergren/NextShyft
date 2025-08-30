@@ -82,6 +82,58 @@ function PinnedAnnouncement() {
   );
 }
 
+function DemoSignupBar() {
+  const [info, setInfo] = useState<{ orgId: string; claimToken: string } | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/demo/info', { cache: 'no-store' });
+        if (!res.ok) return;
+        const d = await res.json();
+        if (alive && d?.ok) setInfo({ orgId: d.orgId, claimToken: d.claimToken });
+      } catch {}
+    })();
+    (async () => {
+      try {
+        const r = await fetch('/api/me/roles', { cache: 'no-store' });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (alive && Array.isArray(d.roles)) setRoles(d.roles);
+      } catch {}
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (!info) return null;
+  const href = `/signup?importDemo=1&orgId=${encodeURIComponent(info.orgId)}&claimToken=${encodeURIComponent(info.claimToken)}`;
+  const rolePriority = ['ADMIN', 'SUPERADMIN', 'OWNER', 'MANAGER', 'EMPLOYEE'];
+  const upper = roles.map((r: string) => String(r).toUpperCase());
+  const primary = rolePriority.find((r) => upper.includes(r)) || upper[0] || '';
+  const pretty = primary
+    ? primary === 'SUPERADMIN'
+      ? 'Admin'
+      : primary.charAt(0) + primary.slice(1).toLowerCase()
+    : '';
+  return (
+    <Alert
+      severity="info"
+      sx={{ borderRadius: 0 }}
+      action={
+        <Button href={href} variant="contained" size="small" color="info">
+          Import demo data & sign up
+        </Button>
+      }
+    >
+      You’re viewing a demo{pretty ? ` as ` : ''}
+      {pretty ? <strong>{pretty}</strong> : null}. Keep your work by importing this demo data into a
+      new account.
+    </Alert>
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [roles, setRoles] = useState<string[]>([]);
   const [orgName, setOrgName] = useState<string>('');
@@ -105,6 +157,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       alive = false;
     };
   }, []);
+
+  // Fallback: if not authenticated and server roles haven’t populated yet,
+  // read roles from the demo mock cookie so the top navbar matches the selected demo role.
+  useEffect(() => {
+    if (roles.length > 0) return; // already have roles
+    if (status === 'loading') return;
+    try {
+      const m = (typeof document !== 'undefined' ? document.cookie : '').match(
+        /__mocksession=([^;]+)/,
+      );
+      if (!m) return;
+      const mock = JSON.parse(decodeURIComponent(m[1]));
+      const list = Array.isArray(mock?.roles) ? mock.roles : [];
+      if (list.length > 0) setRoles(list);
+    } catch {}
+  }, [roles.length, status]);
 
   // Hide browser print header (which shows document.title) to avoid duplicate "NextShyft" on print
   useEffect(() => {
@@ -145,10 +213,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Load organization name for the current session (if authenticated)
+  // Load organization name for the current session (if authenticated), but never on /signup
   useEffect(() => {
     let alive = true;
-    if (!authed) {
+    if (!authed || onSignupPage) {
       setOrgName('');
       return;
     }
@@ -192,6 +260,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isSchedulePage = (path || '').startsWith(`/org/${orgId}/schedule`);
   const isShiftsPage = (path || '').startsWith(`/org/${orgId}/shifts`);
   const isPositionsPage = (path || '').startsWith(`/org/${orgId}/positions`);
+  const onSignupPage = (path || '').startsWith('/signup');
+  const onSigninPage = (path || '').startsWith('/signin');
+  const onForgotPage = (path || '').startsWith('/forgot');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -204,6 +275,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Box>
+        {/* Demo-only signup/retain-data bar above the navbar (hidden on auth pages) */}
+        {!onSignupPage && !onSigninPage && !onForgotPage && (
+          <Box sx={{ '@media print': { display: 'none' } }}>
+            <DemoSignupBar />
+          </Box>
+        )}
         <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'white', color: '#1f2937' }}>
           <Toolbar sx={{ gap: 1, px: 1, position: 'relative', flexWrap: 'wrap' }}>
             {/* Logo + Company name (responsive: stacked on mobile, inline on larger screens) */}
@@ -223,7 +300,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               >
                 NextShyft
               </Typography>
-              {authed && !!orgName && (
+              {authed && !!orgName && !onSignupPage && !onSigninPage && !onForgotPage && (
                 <Typography
                   noWrap={false}
                   variant="subtitle1"
@@ -253,7 +330,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Box sx={{ flex: 1 }} />
 
             {/* Role-based navigation */}
-            {authed && (
+            {authed && !onSignupPage && !onSigninPage && !onForgotPage && (
               <Box
                 sx={{
                   display: 'flex',
@@ -271,21 +348,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             )}
 
             {/* Fallback for unauthenticated users */}
-            {!authed && !path?.startsWith('/signin') && !path?.startsWith('/signup') && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  ml: 'auto',
-                  '@media print': { display: 'none' },
-                }}
-              >
-                <Button href="/signin" variant="contained" size="small">
-                  Sign In
-                </Button>
-              </Box>
-            )}
+            {!authed &&
+              !path?.startsWith('/signin') &&
+              !path?.startsWith('/signup') &&
+              !path?.startsWith('/forgot') && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    ml: 'auto',
+                    '@media print': { display: 'none' },
+                  }}
+                >
+                  <Button href="/signin" variant="contained" size="small">
+                    Sign In
+                  </Button>
+                </Box>
+              )}
 
             {/* Additional components for authenticated users */}
             {authed && (

@@ -1,6 +1,7 @@
 'use client';
 import { Badge, IconButton, Menu, MenuItem, ListItemText, Divider } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import BlockIcon from '@mui/icons-material/Block';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import NotificationsModal from '@/components/NotificationsModal';
@@ -22,8 +23,11 @@ export default function NotifBell() {
   const { data: session } = useSession();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [isDemo, setIsDemo] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const load = async () => {
+    if (isDemo) return; // disable notifications API in demo mode
     try {
       const [unreadRes, listRes] = await Promise.all([
         fetch('/api/notifications?unread=1', { cache: 'no-store' }),
@@ -37,19 +41,27 @@ export default function NotifBell() {
   };
 
   useEffect(() => {
+    // detect demo session via cookie
+    try {
+      const hasDemo = typeof document !== 'undefined' && /__demosession=/.test(document.cookie);
+      setIsDemo(!!hasDemo);
+    } catch {}
     (async () => {
       try {
         const r = await fetch('/api/me/roles', { cache: 'no-store' });
         const d = await r.json();
         const ok = Array.isArray(d.roles) && d.roles.length > 0;
-        if (ok) {
+        const hasDemoNow =
+          typeof document !== 'undefined' && /__demosession=/.test(document.cookie);
+        if (ok && !hasDemoNow) {
           await load();
           const t = setInterval(load, 20000);
           return () => clearInterval(t);
         }
       } catch {}
     })();
-  }, []);
+    // re-run when isDemo changes
+  }, [isDemo]);
 
   const handleOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -61,9 +73,15 @@ export default function NotifBell() {
 
   return (
     <>
-      <IconButton onClick={handleOpen} aria-label="notifications">
+      <IconButton
+        onClick={handleOpen}
+        aria-label="notifications"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        title={isDemo ? 'Notifications are disabled in demo mode' : undefined}
+      >
         <Badge badgeContent={count} color="primary">
-          <NotificationsIcon />
+          {isDemo && hovered ? <BlockIcon color="error" /> : <NotificationsIcon />}
         </Badge>
       </IconButton>
       <Menu

@@ -12,12 +12,13 @@ import {
   Container,
   Box,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export default function SignUpPage() {
+  const search = useSearchParams();
   const [mode, setMode] = useState<'new' | 'join'>('new');
   const [plan, setPlan] = useState<'free' | 'pro' | 'business'>('free');
-  const [orgName, setOrgName] = useState('');
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -25,6 +26,20 @@ export default function SignUpPage() {
   const [code, setCode] = useState('');
   const [ok, setOk] = useState<boolean | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Persist demo import params in memory so we can send them to the server after signup
+  const importDemo = search?.get('importDemo') === '1';
+  const importOrgId = search?.get('orgId') || '';
+  const importToken = search?.get('claimToken') || '';
+  // Optional: could store in sessionStorage to survive reloads
+  useEffect(() => {
+    if (!importDemo) return;
+    try {
+      sessionStorage.setItem(
+        'demoImport',
+        JSON.stringify({ orgId: importOrgId, claimToken: importToken }),
+      );
+    } catch {}
+  }, [importDemo, importOrgId, importToken]);
 
   const submit = async () => {
     setErr(null);
@@ -35,7 +50,16 @@ export default function SignUpPage() {
       const r = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orgName, email, firstName, lastName, password, plan }),
+        body: JSON.stringify({
+          email,
+          firstName,
+          lastName,
+          password,
+          plan,
+          importDemo,
+          orgId: importOrgId,
+          claimToken: importToken,
+        }),
       });
       const d = await r.json().catch(() => ({}));
       console.log('Signup response:', r.status, d);
@@ -45,6 +69,7 @@ export default function SignUpPage() {
           window.location.href = d.checkoutUrl as string;
           return;
         }
+        // If server supports claiming the demo data now, it can redirect or mark success
         setOk(true);
       } else setErr(d.error || 'Signup failed');
     } else {
@@ -189,45 +214,7 @@ export default function SignUpPage() {
             )}
 
             <Stack spacing={3} sx={{ width: '100%', maxWidth: '640px' }}>
-              {mode === 'new' && (
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mb: 1,
-                      color: '#374151',
-                      fontWeight: 500,
-                      fontSize: '0.875rem',
-                    }}
-                  >
-                    Organization Name
-                  </Typography>
-                  <TextField
-                    value={orgName}
-                    onChange={(e) => setOrgName(e.target.value)}
-                    fullWidth
-                    placeholder="Enter organization name"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        bgcolor: '#fff',
-                        '& fieldset': {
-                          borderColor: '#d1d5db',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#9ca3af',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#1f2937',
-                        },
-                      },
-                      '& .MuiInputBase-input': {
-                        color: '#1f2937',
-                      },
-                    }}
-                  />
-                </Box>
-              )}
+              {/* Organization name removed: we keep the demo org name when importing, or generate a sensible default on the server for new orgs. */}
 
               {mode === 'new' && (
                 <Box>
