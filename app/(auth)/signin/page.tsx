@@ -25,16 +25,24 @@ function SignInInner() {
       if (password) {
         // Try password authentication first
         console.log('[SIGNIN] Attempting password authentication for:', email);
-        const res = await signIn('password', { email, password, callbackUrl, redirect: true });
+        // Use redirect: false so we can handle errors without flashing
+        const res = await signIn('password', { email, password, callbackUrl, redirect: false });
         console.log('[SIGNIN] Password auth result:', res);
 
-        // If we reach here, there was an error (redirect: true should have redirected on success)
         if (res?.error) {
           console.log('[SIGNIN] Password auth error:', res.error);
-          setErrorMsg(res.error);
+          // Normalize common next-auth error ids to a friendly message
+          const friendly =
+            res.error === 'CredentialsSignin' ? 'Invalid email or password' : res.error;
+          setErrorMsg(friendly || 'Invalid email or password');
           return;
         }
-        // If we reach here without an error, something unexpected happened
+        // Success: next-auth returns a URL when redirect: false
+        if (res?.ok !== false) {
+          // Prefer provided url; fall back to callbackUrl
+          router.replace(res?.url || callbackUrl);
+          return;
+        }
         setErrorMsg('Invalid email or password');
       } else {
         // Magic link authentication

@@ -12,10 +12,10 @@ import {
   Container,
   Box,
 } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function SignUpPage() {
+function SignUpInner() {
   const search = useSearchParams();
   const [mode, setMode] = useState<'new' | 'join'>('new');
   const [plan, setPlan] = useState<'free' | 'pro' | 'business'>('free');
@@ -540,5 +540,13 @@ export default function SignUpPage() {
         </Paper>
       </Container>
     </AppShell>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpInner />
+    </Suspense>
   );
 }
