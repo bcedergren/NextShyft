@@ -16,6 +16,7 @@
     "seed:dashboard": "tsx scripts/seed-dashboard.ts",
     "create:test-user": "tsx scripts/create-test-user.ts",
     "create:test-accounts": "tsx scripts/create-test-accounts.ts",
+    "create:indexes": "tsx scripts/create-indexes.ts",
     "check:env": "tsx scripts/check-env.ts"
   },
   "dependencies": {
