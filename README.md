@@ -1,10 +1,27 @@
-# NextShyft Scaffold
+# NextShyft
 
-NextShyft is a Next.js 14 app scaffold for workforce scheduling and shift management.
+NextShyft is a modern workforce scheduling SaaS platform built with Next.js 14, targeting restaurants, retail, healthcare, and logistics teams.
 
 ![CI](https://github.com/bcedergren/NextShyft/actions/workflows/ci.yml/badge.svg)
 
-Run `pnpm install && pnpm dev` inside `apps/web`
+**📊 Project Status:** 85% Complete | **🎯 Target:** Production-ready MVP in 6-8 weeks
+
+## 🗺️ MVP Roadmap
+
+Comprehensive roadmap documents have been created to guide development to launch:
+
+- **[📋 ROADMAP_SUMMARY.md](ROADMAP_SUMMARY.md)** - Executive overview and key insights
+- **[📖 MVP_ROADMAP.md](MVP_ROADMAP.md)** - Detailed 5-phase development plan
+- **[✅ MVP_CHECKLIST.md](MVP_CHECKLIST.md)** - Week-by-week actionable checklist
+- **[📊 VISUAL_ROADMAP.md](VISUAL_ROADMAP.md)** - Timeline visualization and progress tracking
+- **[🎫 GITHUB_ISSUES.md](GITHUB_ISSUES.md)** - 31 ready-to-import GitHub issues
+- **[⚡ QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** - Implementation guide for critical path
+
+**Next Steps:** Review roadmap documents, set up GitHub project, deploy staging environment
+
+---
+
+## Quick Start
 
 ## Setup Instructions
 
