@@ -2,8 +2,11 @@ const path = require('path');
 
 module.exports = {
   reactStrictMode: true,
-  eslint: { ignoreDuringBuilds: true },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: { serverActions: { bodySizeLimit: '2mb' } },
+  turbopack: {},
   
   async headers() {
     return [

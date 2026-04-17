@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
+import { authOptions } from '@/lib/auth';
+import { dbConnect } from '@/lib/db';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { generateSchedule, Shift, Employee } from '@/lib/scheduler/ilp';
+import { generateSchedule, Shift as ShiftType, Employee } from '@/lib/scheduler/ilp';
 import OrgPolicy from '@/models/OrgPolicy';
 import User from '@/models/User';
 import ShiftTemplate from '@/models/ShiftTemplate';
 import Availability from '@/models/Availability';
 import Schedule from '@/models/Schedule';
-import Shift as ShiftModel from '@/models/Shift';
-import dbConnect from '@/lib/db';
+import Shift from '@/models/Shift';
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -64,9 +64,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     // Fetch existing shifts for this schedule to use as templates
-    const existingShifts = await ShiftModel.find({ scheduleId: params.id });
+    const existingShifts = await Shift.find({ scheduleId: params.id });
     
-    let shifts: Shift[] = [];
+    let shifts: ShiftType[] = [];
     
     if (existingShifts.length > 0) {
       // Use existing shifts
@@ -160,12 +160,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         });
       }
       
-      await ShiftModel.insertMany(shiftDocs);
+      await Shift.insertMany(shiftDocs);
     } else {
       // Update existing shifts with assignments
       for (const shift of shifts) {
         const assignedTo = result.assignments[shift.id] || [];
-        await ShiftModel.updateOne(
+        await Shift.updateOne(
           { _id: shift.id },
           { $set: { assignedTo } }
         );

@@ -18,7 +18,7 @@ export default function TermsPage() {
       <Divider sx={{ mb: 4 }} />
 
       <Box sx={{ '& > *': { mb: 3 } }}>
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             1. Acceptance of Terms
           </Typography>
@@ -26,9 +26,9 @@ export default function TermsPage() {
             By accessing or using NextShyft ("the Service"), you agree to be bound by these Terms of Service ("Terms"). 
             If you do not agree to these Terms, you may not use the Service.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             2. Description of Service
           </Typography>
@@ -37,9 +37,9 @@ export default function TermsPage() {
             The Service allows organizations to create schedules, manage employee availability, 
             and communicate shift information to team members.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             3. User Accounts
           </Typography>
@@ -52,9 +52,9 @@ export default function TermsPage() {
             <li>Notifying us immediately of any unauthorized use</li>
             <li>Providing accurate and current information</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             4. Acceptable Use
           </Typography>
@@ -70,9 +70,9 @@ export default function TermsPage() {
             <li>Impersonate any person or entity</li>
             <li>Scrape, spider, or harvest data from the Service</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             5. Subscription and Payment
           </Typography>
@@ -92,9 +92,9 @@ export default function TermsPage() {
             <strong>Price Changes:</strong> We may change subscription prices with 30 days' notice. 
             Continued use of the Service after a price change constitutes acceptance of the new price.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             6. Data and Privacy
           </Typography>
@@ -105,9 +105,9 @@ export default function TermsPage() {
           <Typography paragraph>
             You retain all rights to your data. You may export or delete your data at any time through your account settings.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             7. Intellectual Property
           </Typography>
@@ -119,9 +119,9 @@ export default function TermsPage() {
             You are granted a limited, non-exclusive, non-transferable license to access and use the Service 
             for your internal business purposes only.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             8. Termination
           </Typography>
@@ -134,9 +134,9 @@ export default function TermsPage() {
             <li>You remain liable for all fees incurred prior to termination</li>
             <li>You may request a data export within 30 days of termination</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             9. Disclaimer of Warranties
           </Typography>
@@ -148,9 +148,9 @@ export default function TermsPage() {
           <Typography paragraph>
             We do not warrant that the Service will be uninterrupted, error-free, or completely secure.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             10. Limitation of Liability
           </Typography>
@@ -163,9 +163,9 @@ export default function TermsPage() {
             Our total liability to you for any claims arising from your use of the Service shall not exceed 
             the amount you paid us in the 12 months preceding the claim.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             11. Indemnification
           </Typography>
@@ -178,9 +178,9 @@ export default function TermsPage() {
             <li>Your violation of these Terms</li>
             <li>Your violation of any rights of another party</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             12. Changes to Terms
           </Typography>
@@ -189,9 +189,9 @@ export default function TermsPage() {
             via email or through the Service. Your continued use of the Service after such changes constitutes 
             your acceptance of the new Terms.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             13. Governing Law
           </Typography>
@@ -199,9 +199,9 @@ export default function TermsPage() {
             These Terms shall be governed by and construed in accordance with the laws of the jurisdiction 
             in which NextShyft is registered, without regard to its conflict of law provisions.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             14. Contact Information
           </Typography>
@@ -211,7 +211,7 @@ export default function TermsPage() {
           <Typography paragraph>
             Email: support@YOUR_DOMAIN.com
           </Typography>
-        </section>
+        </Box>
       </Box>
     </Box>
   );

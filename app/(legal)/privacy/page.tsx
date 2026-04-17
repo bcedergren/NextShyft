@@ -17,8 +17,8 @@ export default function PrivacyPage() {
 
       <Divider sx={{ mb: 4 }} />
 
-      <Box sx={{ '& > *': { mb: 3 }}>
-        <section>
+      <Box sx={{ '& > *': { mb: 3 } }}>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             1. Introduction
           </Typography>
@@ -27,9 +27,9 @@ export default function PrivacyPage() {
             This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use 
             our workforce scheduling service ("Service").
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             2. Information We Collect
           </Typography>
@@ -58,9 +58,9 @@ export default function PrivacyPage() {
             <li><strong>Device Information:</strong> IP address, browser type, operating system</li>
             <li><strong>Cookies and Tracking:</strong> Session cookies, analytics cookies</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             3. How We Use Your Information
           </Typography>
@@ -77,9 +77,9 @@ export default function PrivacyPage() {
             <li>Detect, prevent, and address technical issues and fraud</li>
             <li>Comply with legal obligations</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             4. Legal Basis for Processing (GDPR)
           </Typography>
@@ -92,9 +92,9 @@ export default function PrivacyPage() {
             <li><strong>Consent:</strong> For marketing communications (you can opt out anytime)</li>
             <li><strong>Legal Obligation:</strong> To comply with applicable laws</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             5. Data Sharing and Disclosure
           </Typography>
@@ -130,9 +130,9 @@ export default function PrivacyPage() {
           <Typography paragraph>
             We may disclose your information if required by law, subpoena, or to protect our rights and safety.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             6. Data Retention
           </Typography>
@@ -149,9 +149,9 @@ export default function PrivacyPage() {
             <li>Billing records: 7 years for tax compliance</li>
             <li>Audit logs: 1 year (anonymized)</li>
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             7. Your Data Rights
           </Typography>
@@ -193,9 +193,9 @@ export default function PrivacyPage() {
           <Typography paragraph>
             You can withdraw consent for optional data processing (e.g., marketing emails) at any time.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             8. California Privacy Rights (CCPA)
           </Typography>
@@ -211,9 +211,9 @@ export default function PrivacyPage() {
           <Typography paragraph>
             To exercise these rights, contact us at support@YOUR_DOMAIN.com
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             9. Cookies and Tracking
           </Typography>
@@ -228,9 +228,9 @@ export default function PrivacyPage() {
             You can control cookies through your browser settings. Note that disabling essential cookies may 
             affect your ability to use the Service.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             10. Data Security
           </Typography>
@@ -247,9 +247,9 @@ export default function PrivacyPage() {
           <Typography paragraph>
             However, no method of transmission over the Internet is 100% secure. We cannot guarantee absolute security.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             11. Children's Privacy
           </Typography>
@@ -257,9 +257,9 @@ export default function PrivacyPage() {
             The Service is not intended for children under 16. We do not knowingly collect personal information 
             from children. If we learn we have collected data from a child, we will delete it promptly.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             12. International Data Transfers
           </Typography>
@@ -267,9 +267,9 @@ export default function PrivacyPage() {
             Your data may be transferred to and processed in countries other than your own. 
             We ensure appropriate safeguards are in place, such as Standard Contractual Clauses for EU data transfers.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             13. Changes to This Privacy Policy
           </Typography>
@@ -277,9 +277,9 @@ export default function PrivacyPage() {
             We may update this Privacy Policy from time to time. We will notify you of material changes via email 
             or through the Service. The "Last updated" date at the top reflects the most recent version.
           </Typography>
-        </section>
+        </Box>
 
-        <section>
+        <Box component="section">
           <Typography variant="h5" gutterBottom>
             14. Contact Us
           </Typography>
@@ -293,7 +293,7 @@ export default function PrivacyPage() {
             <strong>For EU residents:</strong> You also have the right to lodge a complaint with your local 
             data protection authority.
           </Typography>
-        </section>
+        </Box>
       </Box>
     </Box>
   );

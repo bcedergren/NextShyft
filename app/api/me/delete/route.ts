@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { authOptions } from '@/lib/auth';
+import { dbConnect } from '@/lib/db';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import Shift from '@/models/Shift';
 import Availability from '@/models/Availability';
