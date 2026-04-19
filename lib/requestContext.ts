@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 export async function getRequestContext() {
   if (process.env.TEST_BYPASS_AUTH === '1') {
     try {
-      const c = cookies().get('__mocksession')?.value;
+      const cookieStore = await cookies();
+      const c = cookieStore.get('__mocksession')?.value;
       if (c) {
         const mock = JSON.parse(decodeURIComponent(c));
         const session = {

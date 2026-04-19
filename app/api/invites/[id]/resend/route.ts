@@ -29,7 +29,7 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
       from,
       to: invite.email,
       subject: "You're invited to NextShyft",
-      html: inviteEmail(link),
+      html: await inviteEmail(link),
     });
   }
 

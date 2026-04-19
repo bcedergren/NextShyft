@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         from,
         to: lower,
         subject: 'Reset your password',
-        html: resetPasswordEmail(url),
+        html: await resetPasswordEmail(url),
       });
     }
   }

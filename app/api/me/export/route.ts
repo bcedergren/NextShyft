@@ -13,19 +13,18 @@ export async function GET() {
     await dbConnect();
     
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = ((session as any)?.user?.id as string | undefined) || '';
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = session.user.id;
-
     // Fetch all user data
     const [user, shifts, availability, notifications, auditLogs] = await Promise.all([
-      User.findById(userId).lean(),
-      Shift.find({ assignedTo: userId }).lean(),
-      Availability.findOne({ userId }).lean(),
-      Notification.find({ userId }).lean(),
-      Audit.find({ userId }).lean()
+      (User as any).findById(userId).lean(),
+      (Shift as any).find({ assignedTo: userId }).lean(),
+      (Availability as any).findOne({ userId }).lean(),
+      (Notification as any).find({ userId }).lean(),
+      (Audit as any).find({ userId }).lean()
     ]);
 
     if (!user) {
@@ -43,7 +42,7 @@ export async function GET() {
     const exportData = {
       exportDate: new Date().toISOString(),
       user: sanitizedUser,
-      shifts: shifts.map(s => ({
+      shifts: (shifts || []).map((s: any) => ({
         id: s._id,
         scheduleId: s.scheduleId,
         positionId: s.positionId,
@@ -55,14 +54,14 @@ export async function GET() {
         updatedAt: s.updatedAt
       })),
       availability: availability || null,
-      notifications: notifications.map(n => ({
+      notifications: (notifications || []).map((n: any) => ({
         id: n._id,
         type: n.type,
         message: n.message,
         read: n.read,
         createdAt: n.createdAt
       })),
-      auditLog: auditLogs.map(a => ({
+      auditLog: (auditLogs || []).map((a: any) => ({
         action: a.action,
         timestamp: a.timestamp,
         details: a.details

@@ -68,7 +68,7 @@ export async function POST(req: Request) {
           from: process.env.EMAIL_FROM || 'noreply@nextshyft.app',
           to: email,
           subject: 'Join NextShyft',
-          html: inviteEmail(link),
+          html: await inviteEmail(link),
         });
       }
       return NextResponse.json({ ok: true, directJoin: false });

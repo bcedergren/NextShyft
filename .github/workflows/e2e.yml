@@ -27,7 +27,7 @@ jobs:
       - name: Create minimal env
         run: |
           cp .env.example .env.local 2>/dev/null || true
-          echo "NEXTAUTH_SECRET=$(node -e \"console.log(require('crypto').randomBytes(16).toString('hex'))\")" >> .env.local
+          echo "NEXTAUTH_SECRET=$(openssl rand -hex 16)" >> .env.local
           echo "NEXT_PUBLIC_DEMO_MODE=1" >> .env.local
           echo "NEXT_PUBLIC_DEMO_ORG_ID=689e3862cd3e503e177a5715" >> .env.local
           echo "MONGODB_URI=mongodb://127.0.0.1:27017/nextshyft_e2e?directConnection=true" >> .env.local

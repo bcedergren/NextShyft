@@ -15,7 +15,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     await dbConnect();
     
     const session = await getServerSession(authOptions);
-    if (!session?.user?.orgId) {
+    const orgId = (((session as any)?.user?.orgId || (session as any)?.orgId) as string | undefined) || '';
+    if (!orgId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -25,9 +26,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     // Fetch schedule to verify it exists and belongs to org
-    const schedule = await Schedule.findOne({ 
+    const schedule = await (Schedule as any).findOne({ 
       _id: params.id, 
-      orgId: session.user.orgId 
+      orgId 
     });
     
     if (!schedule) {
@@ -35,16 +36,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     // Fetch org policy for constraints
-    const policy = await OrgPolicy.findOne({ orgId: session.user.orgId });
+    const policy = await (OrgPolicy as any).findOne({ orgId });
     
     // Fetch all employees with their positions and availability
-    const users = await User.find({ 
-      orgId: session.user.orgId,
+    const users = await (User as any).find({ 
+      orgId,
       roles: 'EMPLOYEE'
     });
 
     // Fetch availability for all employees
-    const availabilities = await Availability.find({
+    const availabilities = await (Availability as any).find({
       userId: { $in: users.map(u => u._id) }
     });
 
@@ -64,7 +65,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     // Fetch existing shifts for this schedule to use as templates
-    const existingShifts = await Shift.find({ scheduleId: params.id });
+    const existingShifts = await (Shift as any).find({ scheduleId: params.id });
     
     let shifts: ShiftType[] = [];
     
@@ -81,8 +82,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       }));
     } else {
       // Create shifts from templates
-      const templates = await ShiftTemplate.find({ 
-        orgId: session.user.orgId 
+      const templates = await (ShiftTemplate as any).find({ 
+        orgId 
       });
       
       if (templates.length === 0) {
@@ -149,7 +150,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         const assignedTo = result.assignments[shift.id] || [];
         shiftDocs.push({
           scheduleId: params.id,
-          orgId: session.user.orgId,
+          orgId,
           positionId: shift.positionId,
           day: shift.day,
           date: shift.date,
@@ -160,12 +161,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         });
       }
       
-      await Shift.insertMany(shiftDocs);
+      await (Shift as any).insertMany(shiftDocs);
     } else {
       // Update existing shifts with assignments
       for (const shift of shifts) {
         const assignedTo = result.assignments[shift.id] || [];
-        await Shift.updateOne(
+        await (Shift as any).updateOne(
           { _id: shift.id },
           { $set: { assignedTo } }
         );

@@ -14,12 +14,11 @@ export async function DELETE() {
     await dbConnect();
     
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = ((session as any)?.user?.id as string | undefined) || '';
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = session.user.id;
-    const user = await User.findById(userId);
+    const user = await (User as any).findById(userId);
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -30,7 +29,7 @@ export async function DELETE() {
     const anonymizedEmail = `deleted-${userId}-${Date.now()}@deleted.local`;
     const deletionDate = new Date();
 
-    await User.updateOne(
+    await (User as any).updateOne(
       { _id: userId },
       {
         $set: {
@@ -55,19 +54,19 @@ export async function DELETE() {
     );
 
     // Remove user from all future shift assignments
-    await Shift.updateMany(
+    await (Shift as any).updateMany(
       { assignedTo: userId, date: { $gte: new Date().toISOString().split('T')[0] } },
       { $pull: { assignedTo: userId } }
     );
 
     // Delete availability
-    await Availability.deleteMany({ userId });
+    await (Availability as any).deleteMany({ userId });
 
     // Delete notifications
-    await Notification.deleteMany({ userId });
+    await (Notification as any).deleteMany({ userId });
 
     // Delete pending swap requests
-    await SwapRequest.deleteMany({
+    await (SwapRequest as any).deleteMany({
       $or: [
         { requesterId: userId },
         { targetId: userId }
@@ -76,7 +75,7 @@ export async function DELETE() {
     });
 
     // Delete pending invites
-    await Invite.deleteMany({ 
+    await (Invite as any).deleteMany({ 
       email: user.email,
       status: 'pending'
     });

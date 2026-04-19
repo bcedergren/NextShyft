@@ -8,7 +8,8 @@ import Org from '@/models/Org';
 export async function requireManager(opts?: { allowWhenSuspended?: boolean }) {
   const bypass = process.env.TEST_BYPASS_AUTH === '1';
   if (bypass) {
-    const c = cookies().get('__mocksession')?.value;
+    const cookieStore = await cookies();
+    const c = cookieStore.get('__mocksession')?.value;
     if (c) {
       try {
         const mock = JSON.parse(decodeURIComponent(c));
@@ -57,7 +58,8 @@ export async function requireManager(opts?: { allowWhenSuspended?: boolean }) {
 
 export async function requireOwner(opts?: { allowWhenSuspended?: boolean }) {
   if (process.env.TEST_BYPASS_AUTH === '1') {
-    const c = cookies().get('__mocksession')?.value;
+    const cookieStore = await cookies();
+    const c = cookieStore.get('__mocksession')?.value;
     if (c) {
       try {
         const mock = JSON.parse(decodeURIComponent(c));

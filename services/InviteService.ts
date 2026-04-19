@@ -24,7 +24,7 @@ export class InviteService {
     const tok = this.token();
     const invite = await (Invite as any).create({ orgId, email, role, token: tok });
     const link = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/accept?token=${tok}`;
-    await this.emailSender.send(email, 'Join NextShyft', inviteEmail(link));
+    await this.emailSender.send(email, 'Join NextShyft', await inviteEmail(link));
     return invite;
   }
 }
