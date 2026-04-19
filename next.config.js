@@ -6,7 +6,6 @@ module.exports = {
     ignoreBuildErrors: true,
   },
   experimental: { serverActions: { bodySizeLimit: '2mb' } },
-  turbopack: {},
   
   async headers() {
     return [
