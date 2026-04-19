@@ -30,10 +30,14 @@ export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const currentEmail = (session.user as any)?.email;
+  const currentName = (session.user as any)?.name || '';
   await dbConnect();
   const { name, email, phone } = await req.json();
-  const nextName = typeof name === 'string' ? name.trim() : '';
-  const nextEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  const nextName = typeof name === 'string' ? name.trim() : currentName;
+  const nextEmail =
+    typeof email === 'string' && email.trim()
+      ? email.trim().toLowerCase()
+      : String(currentEmail || '').toLowerCase();
 
   if (!nextName || !nextEmail)
     return NextResponse.json({ error: 'Name and email are required' }, { status: 400 });

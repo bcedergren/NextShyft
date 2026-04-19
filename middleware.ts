@@ -14,6 +14,7 @@ function isPublicPath(pathname: string) {
     pathname.startsWith('/reset') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/demo') ||
+    pathname.startsWith('/api/health') ||
     pathname.startsWith('/api/test/login') ||
     pathname.startsWith('/api/test/logout') ||
     pathname.startsWith('/api/signup') ||
@@ -25,6 +26,76 @@ function isPublicPath(pathname: string) {
 
 export default withAuth(
   async function middleware(req: NextRequest) {
+    if (process.env.TEST_BYPASS_AUTH === '1' && req.nextUrl.pathname.startsWith('/api/')) {
+      const { pathname } = req.nextUrl;
+      if (isPublicPath(pathname)) return NextResponse.next();
+
+      const raw = req.cookies.get('__mocksession')?.value;
+      if (!raw) {
+        return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      let roles: string[] = [];
+      try {
+        const mock = JSON.parse(decodeURIComponent(raw));
+        roles = Array.isArray(mock?.roles) ? mock.roles : [];
+      } catch {
+        return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const hasAnyRole = (...allowed: string[]) => allowed.some((r) => roles.includes(r));
+      const isManagerLike = hasAnyRole('MANAGER', 'OWNER', 'ADMIN', 'SUPERADMIN');
+
+      if (pathname.startsWith('/api/orgs') || pathname.startsWith('/api/admin/')) {
+        if (!roles.includes('SUPERADMIN')) {
+          return new NextResponse(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      } else if (pathname.startsWith('/api/audit/export')) {
+        if (!isManagerLike) {
+          return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      } else if (
+        pathname.startsWith('/api/audit') ||
+        pathname.startsWith('/api/shifts/assign') ||
+        pathname.startsWith('/api/policy') ||
+        pathname.startsWith('/api/availability/all') ||
+        pathname.startsWith('/api/invites')
+      ) {
+        if (!isManagerLike) {
+          return new NextResponse(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      } else if (pathname.startsWith('/api/swaps') && req.method === 'PUT') {
+        if (!isManagerLike) {
+          return new NextResponse(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      } else if (pathname.startsWith('/api/positions') && req.method !== 'GET') {
+        if (!isManagerLike) {
+          return new NextResponse(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    }
+
     // Rate limit non-idempotent requests
     if (!(req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS')) {
       const { ok, headers } = await rateLimit(req, 10, 60_000);
@@ -45,6 +116,9 @@ export default withAuth(
       // Determine if user is authorized to access this route
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
+        if (process.env.TEST_BYPASS_AUTH === '1' && pathname.startsWith('/api/')) {
+          return true;
+        }
         // Allow public demo access when a mock session cookie is present and bypass is enabled
         if (
           process.env.TEST_BYPASS_AUTH === '1' &&

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
 import DemoSession from '@/models/DemoSession';
+import { encode } from 'next-auth/jwt';
 
 type MockSession = {
   email: string;
@@ -12,6 +13,22 @@ function setMockCookie(data: MockSession) {
   const cookieValue = encodeURIComponent(JSON.stringify(data));
   const maxAge = 60 * 60 * 24; // 1 day
   return `__mocksession=${cookieValue}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
+}
+
+async function setNextAuthCookie(data: MockSession) {
+  const maxAge = 60 * 60 * 24; // 1 day
+  const secret = process.env.NEXTAUTH_SECRET || 'test-secret';
+  const token = await encode({
+    secret,
+    token: {
+      sub: data.email,
+      email: data.email,
+      orgId: data.orgId,
+      roles: data.roles,
+    } as any,
+    maxAge,
+  });
+  return `next-auth.session-token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
 }
 
 export async function GET(req: Request) {
@@ -39,6 +56,7 @@ export async function GET(req: Request) {
   }
   const res = NextResponse.json({ ok: true, email, roles, orgId });
   res.headers.append('Set-Cookie', setMockCookie({ email, roles, orgId }));
+  res.headers.append('Set-Cookie', await setNextAuthCookie({ email, roles, orgId }));
   return res;
 }
 
@@ -68,6 +86,7 @@ export async function POST(req: Request) {
     }
     const res = NextResponse.json({ ok: true, email, roles, orgId });
     res.headers.append('Set-Cookie', setMockCookie({ email, roles, orgId }));
+    res.headers.append('Set-Cookie', await setNextAuthCookie({ email, roles, orgId }));
     return res;
   } catch {
     const res = NextResponse.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });

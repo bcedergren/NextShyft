@@ -109,7 +109,7 @@ export const authOptions: NextAuthOptions = {
         }
       },
     } as any),
-    ...(process.env.TEST_CREDENTIALS_AUTH === '1'
+    ...(process.env.TEST_BYPASS_AUTH === '1'
       ? [
           Credentials({
             name: 'Credentials',
@@ -132,16 +132,14 @@ export const authOptions: NextAuthOptions = {
   pages: { signIn: '/signin' },
   callbacks: {
     async jwt({ token, user }) {
-      // Populate testing roles/org from envs when using credentials
-      if (user && process.env.TEST_CREDENTIALS_AUTH === '1') {
-        const rolesCsv = process.env.TEST_ROLES || 'OWNER';
-        (token as any).orgId = process.env.TEST_ORG_ID || (process.env.SEED_ORG_ID as string) || '';
-        (token as any).roles = rolesCsv.split(',').map((r) => r.trim());
-      }
-      // On sign-in via non-test providers, propagate org/roles from user if present
       if (user) {
         (token as any).orgId = (user as any).orgId || (token as any).orgId || '';
         (token as any).roles = (user as any).roles || (token as any).roles || ['EMPLOYEE'];
+      }
+      if (process.env.TEST_BYPASS_AUTH === '1') {
+        const rolesCsv = process.env.TEST_ROLES || 'OWNER';
+        (token as any).orgId = process.env.TEST_ORG_ID || (process.env.SEED_ORG_ID as string) || '';
+        (token as any).roles = rolesCsv.split(',').map((r: string) => r.trim());
       }
       (token as any).orgId = (token as any).orgId || '';
       (token as any).roles = (token as any).roles || ['EMPLOYEE'];

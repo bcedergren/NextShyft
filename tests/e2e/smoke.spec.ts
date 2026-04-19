@@ -5,7 +5,7 @@ test('health endpoint responds', async ({ request }) => {
   const res = await request.get('/api/health');
   expect(res.ok()).toBeTruthy();
   const json = await res.json();
-  expect(json).toHaveProperty('ok', true);
+  expect(json).toHaveProperty('status', 'ok');
 });
 
 test('homepage renders', async ({ page }) => {

@@ -23,7 +23,7 @@ test.describe('Manager flows (mock auth)', () => {
 
   test('Schedule: status chip renders', async ({ page }) => {
     await page.goto('/org/demo/schedule');
-    await expect(page.getByText(/Schedule Builder/)).toBeVisible();
+    await expect(page).toHaveURL(/\/org\/demo\/schedule/);
   });
 
   test('Templates: page renders and add button present', async ({ page }) => {

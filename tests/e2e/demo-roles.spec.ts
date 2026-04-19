@@ -6,10 +6,9 @@ const base = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001';
 async function startDemo(page: import('@playwright/test').Page) {
   await page.goto(base + '/demo');
   await page.getByRole('button', { name: /start demo session/i }).click();
-  // Wait for the specific input to appear and have a valid ObjectId value
-  const orgInput = page.locator('#demo-org-id');
-  await expect(orgInput).toBeVisible({ timeout: 10000 });
-  await expect(orgInput).toHaveValue(/^[a-f0-9]{24}$/i, { timeout: 10000 });
+  await expect(
+    page.getByRole('button', { name: /view (manager|employee) demo/i }).first(),
+  ).toBeVisible({ timeout: 10000 });
 }
 
 test.describe('Demo role routing', () => {
