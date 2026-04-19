@@ -1,0 +1,528 @@
+/* NextShyft homepage. Uses --ink, --muted, --border, --accent, --shadow, --ns-* from globals.css */
+
+.page {
+  min-height: 100vh;
+  position: relative;
+  background-image: url('/hero.png');
+  background-size: 100%;
+  background-position: right top;
+  background-repeat: no-repeat;
+}
+
+/* Top header */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(247, 248, 251, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(15, 27, 45, 0.04);
+}
+
+.headerInner {
+  max-width: var(--ns-container);
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.logo span {
+  color: #2b6cb0;
+  font-weight: 600;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.link {
+  color: var(--ink);
+  opacity: 0.85;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.link:hover {
+  opacity: 1;
+}
+
+/* Buttons */
+.btn {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-decoration: none;
+  user-select: none;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnPrimary {
+  background: var(--ink);
+  color: white;
+  box-shadow: var(--shadow);
+}
+
+.btnPrimary:hover {
+  background: #0b1424;
+}
+
+.btnSecondary {
+  background: white;
+  color: var(--ink);
+  border-color: var(--border);
+  box-shadow: 0 10px 24px rgba(15, 27, 45, 0.06);
+}
+
+.btnSecondary:hover {
+  background: rgba(15, 27, 45, 0.02);
+}
+
+/* Hero */
+.hero {
+  max-width: var(--ns-container);
+  margin: 0 auto;
+  padding: 200px 40px 80px;
+}
+
+.h1 {
+  font-size: clamp(36px, 3.6vw, 54px);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  margin: 0 0 18px;
+}
+
+.subhead {
+  font-size: var(--ns-body);
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0 0 26px;
+  max-width: 520px;
+}
+
+.ctaRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.trustRow {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.trustItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(47, 174, 158, 0.14);
+  color: var(--accent);
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Why NextShyft */
+.whyNextShyft {
+  max-width: var(--ns-container);
+  margin: 0 auto;
+  margin-top: 250px;
+  padding: 72px 24px 80px;
+  background: var(--card);
+}
+
+.whyHeadline {
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0 0 8px;
+  color: var(--ink);
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.whyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.whyCard {
+  text-align: center;
+}
+
+.whyIcon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 20px;
+  color: var(--accent);
+}
+
+.whyTitle {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+
+.whyCopy {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Product Walkthrough */
+.walkthrough {
+  max-width: var(--ns-container);
+  margin: 0 auto;
+  padding: 80px 24px 100px;
+  background: var(--card);
+}
+
+.walkthroughSrOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.walkthroughRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+  margin-bottom: 80px;
+}
+
+.walkthroughRow:last-child {
+  margin-bottom: 0;
+}
+
+.walkthroughImage {
+  min-height: 280px;
+  background: rgba(15, 27, 45, 0.04);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.walkthroughImage img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.walkthroughCopy {
+  padding: 0 24px;
+}
+
+.walkthroughTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 12px;
+}
+
+.walkthroughLead {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  margin: 0 0 12px;
+}
+
+.walkthroughBody {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* How It Works */
+.howItWorks {
+  max-width: var(--ns-container);
+  margin: 0 auto;
+  padding: 80px 24px 100px;
+  background: var(--card);
+  text-align: center;
+}
+
+.howItWorksHeadline {
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+
+.howItWorksSub {
+  font-size: 16px;
+  color: var(--muted);
+  margin: 0 0 40px;
+}
+
+.howItWorksGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.howItWorksCard {
+  background: white;
+  border-radius: 12px;
+  padding: 28px 24px;
+  box-shadow: 0 10px 24px rgba(15, 27, 45, 0.06);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.howItWorksCardIcon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 20px;
+  color: #5b9bd5;
+}
+
+.howItWorksCardTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.howItWorksCardBullet {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.howItWorksBulletIcon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: #5b9bd5;
+}
+
+/* Pricing Teaser */
+.pricingTeaser {
+  max-width: var(--ns-container);
+  margin: 0 auto;
+  padding: 80px 24px 100px;
+  background: var(--card);
+  text-align: center;
+}
+
+.pricingTeaserSrOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pricingTeaserLead {
+  font-size: clamp(20px, 2vw, 24px);
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+
+.pricingTeaserList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.pricingTeaserList li {
+  padding: 6px 0;
+}
+
+.pricingTeaserList li::before {
+  content: '✓ ';
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Final CTA */
+.finalCta {
+  max-width: var(--ns-container);
+  margin: 0 auto;
+  padding: 80px 24px 100px;
+  text-align: center;
+  background: var(--bg);
+}
+
+.finalCtaHeadline {
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 auto 28px;
+  max-width: 680px;
+}
+
+.finalCtaRow {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .hero {
+    padding-top: 64px;
+  }
+  .subhead {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 768px) {
+  .whyGrid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .whyNextShyft {
+    padding: 56px 24px 64px;
+  }
+  .walkthroughRow {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 56px;
+  }
+  .walkthroughRow2 .walkthroughImage {
+    order: -1;
+  }
+  .walkthrough {
+    padding: 56px 24px 72px;
+  }
+  .howItWorks {
+    padding: 56px 24px 72px;
+  }
+  .howItWorksGrid {
+    grid-template-columns: 1fr;
+  }
+  .pricingTeaser {
+    padding: 56px 24px 72px;
+  }
+  .finalCta {
+    padding: 56px 24px 72px;
+  }
+}
+
+@media (max-width: 520px) {
+  .headerInner {
+    padding: 14px 16px;
+  }
+  .hero {
+    padding: 52px 16px 56px;
+  }
+  .ctaRow {
+    gap: 12px;
+  }
+  .btn {
+    width: 100%;
+  }
+  .trustRow {
+    gap: 12px;
+  }
+  .whyNextShyft {
+    padding: 48px 16px 56px;
+  }
+  .whyHeadline {
+    margin-bottom: 36px;
+  }
+  .walkthroughRow {
+    margin-bottom: 48px;
+  }
+  .walkthrough {
+    padding: 48px 16px 64px;
+  }
+  .walkthroughLead {
+    font-size: 20px;
+  }
+  .howItWorks {
+    padding: 48px 16px 64px;
+  }
+  .howItWorksSteps li {
+    font-size: 16px;
+  }
+  .pricingTeaser {
+    padding: 48px 16px 64px;
+  }
+  .finalCta {
+    padding: 48px 16px 64px;
+  }
+  .finalCtaRow .btn {
+    width: auto;
+  }
+}

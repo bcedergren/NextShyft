@@ -1,0 +1,25 @@
+NextShyft Organization: Test Organization
+All accounts use password: password123
+
+👤 brad.cedergren@gmail.com
+   Name: Brad Cedergren
+   Role: OWNER
+   Description: Primary account for development/sign-in.
+
+👤 owner@test.com
+   Name: Test Owner
+   Role: OWNER
+   Description: Full access to everything - can manage users, settings, billing, etc.
+
+👤 manager@test.com
+   Name: Test Manager
+   Role: MANAGER
+   Description: Can manage schedules, shifts, and employees - no access to billing or org settings
+
+👤 employee@test.com
+   Name: Test Employee
+   Role: EMPLOYEE
+   Description: Basic access - can view schedule, submit availability, request swaps
+
+
+password123
