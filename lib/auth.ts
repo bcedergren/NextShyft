@@ -136,7 +136,9 @@ export const authOptions: NextAuthOptions = {
         (token as any).orgId = (user as any).orgId || (token as any).orgId || '';
         (token as any).roles = (user as any).roles || (token as any).roles || ['EMPLOYEE'];
       }
-      if (process.env.TEST_BYPASS_AUTH === '1') {
+      const hasOrgId = Boolean((token as any).orgId);
+      const hasRoles = Array.isArray((token as any).roles) && (token as any).roles.length > 0;
+      if (process.env.TEST_BYPASS_AUTH === '1' && !user && !hasOrgId && !hasRoles) {
         const rolesCsv = process.env.TEST_ROLES || 'OWNER';
         (token as any).orgId = process.env.TEST_ORG_ID || (process.env.SEED_ORG_ID as string) || '';
         (token as any).roles = rolesCsv.split(',').map((r: string) => r.trim());
