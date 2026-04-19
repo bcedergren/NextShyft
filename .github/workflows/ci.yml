@@ -13,6 +13,9 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      MONGODB_URI: mongodb://127.0.0.1:27017/nextshyft_ci?directConnection=true
+      NEXTAUTH_SECRET: ci-test-secret
 
     steps:
       - name: Checkout repository
