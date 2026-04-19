@@ -15,7 +15,6 @@ import PageHeader from '@/components/PageHeader';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { useSearchParams } from 'next/navigation';
 
 export default function ScheduleBuilderPage() {
   const [publishing, setPublishing] = useState(false);
@@ -26,12 +25,10 @@ export default function ScheduleBuilderPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'calendar'>('list');
-  const params = useSearchParams();
-  const viewParam = params.get('view');
   useEffect(() => {
-    const v = (viewParam || '').toLowerCase();
+    const v = new URLSearchParams(window.location.search).get('view')?.toLowerCase() || '';
     if (v === 'calendar') setView('calendar');
-  }, [viewParam]);
+  }, []);
   const [stats, setStats] = useState<{
     scheduleId: string | null;
     shiftCount: number;
