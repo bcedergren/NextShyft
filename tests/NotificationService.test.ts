@@ -1,6 +1,13 @@
 
 import { NotificationService } from '@/services/NotificationService';
 
+jest.mock('@/models/Notification', () => ({
+  __esModule: true,
+  default: {
+    create: jest.fn().mockResolvedValue({}),
+  },
+}));
+
 test('notify triggers email and push when provided', async () => {
   const email = { send: jest.fn() };
   const push = { send: jest.fn() };

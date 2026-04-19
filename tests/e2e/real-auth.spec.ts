@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const enabled =
-  process.env.TEST_CREDENTIALS_AUTH === '1' &&
+  process.env.TEST_BYPASS_AUTH === '1' &&
   !!process.env.TEST_EMAIL &&
   !!process.env.TEST_PASSWORD;
 
