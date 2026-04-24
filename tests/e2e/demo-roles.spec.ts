@@ -12,6 +12,14 @@ async function startDemo(page: import('@playwright/test').Page) {
 }
 
 test.describe('Demo role routing', () => {
+  test('Manager demo can start directly from the role button', async ({ page }) => {
+    await page.goto(base + '/demo');
+    await page.getByRole('button', { name: /view manager demo/i }).click();
+    await page.waitForURL(/\/org\/.+\/dashboard$/);
+    await expect(page).toHaveURL(/\/org\/.+\/dashboard$/);
+    await expect(page.getByText('Dashboard', { exact: false })).toBeVisible();
+  });
+
   test('Manager demo goes to org dashboard', async ({ page }) => {
     await startDemo(page);
     await page.getByRole('button', { name: /view manager demo/i }).click();

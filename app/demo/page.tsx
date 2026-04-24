@@ -1,27 +1,8 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowRight,
-  CalendarDays,
-  Users,
-  Quote,
-  ShieldCheck,
-  LayoutDashboard,
-  Bell,
-  TrendingUp,
-  Check,
-} from 'lucide-react';
-import {
-  Button,
-  TextField,
-  Typography,
-  Box,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ArrowRight, ShieldCheck, LayoutDashboard, Bell, Check } from 'lucide-react';
+import { Button, TextField, Typography, Box } from '@mui/material';
 // removed MUI numeric icons in favor of lucide icons for consistency
 import Link from 'next/link';
 import PageLayout from '@/components/PageLayout';
@@ -99,86 +80,23 @@ export default function DemoHub() {
     </Box>
   );
 
-  // Reusable gradient number chip for steps
-  const NumberChip = ({
-    n,
-    from,
-    to,
-    ring,
-    size = 56,
-  }: {
-    n: number;
-    from: string;
-    to: string;
-    ring: string;
-    size?: number;
-  }) => (
-    <Box
-      sx={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        '&:hover .chip-glow-num': { opacity: 0.9 },
-      }}
-      aria-hidden
-    >
-      <Box
-        className="chip-glow-num"
-        sx={{
-          position: 'absolute',
-          inset: '-8px',
-          borderRadius: '9999px',
-          background: `linear-gradient(135deg, ${from}33, ${to}33)`,
-          filter: 'blur(16px)',
-          opacity: 0.35,
-          transition: 'opacity .3s ease',
-          zIndex: 0,
-        }}
-      />
-      <Box
-        sx={{
-          height: size,
-          width: size,
-          borderRadius: '9999px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          fontWeight: 700,
-          fontSize: Math.max(12, Math.round(size * 0.38)),
-          lineHeight: 1,
-          background: `linear-gradient(135deg, ${from}, ${to})`,
-          border: `2px solid ${ring}`,
-          outline: '2px solid #fff',
-          outlineOffset: '-2px',
-          boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        {n}
-      </Box>
-    </Box>
-  );
-
-  const STEP_STYLES = [
-    { from: '#0ea5e9', to: '#6366f1', ring: '#7dd3fc' }, // sky -> indigo
-    { from: '#10b981', to: '#14b8a6', ring: '#6ee7b7' }, // emerald -> teal
-    { from: '#6366f1', to: '#8b5cf6', ring: '#a5b4fc' }, // indigo -> violet
-  ];
   const defaultOrgId = (process.env.NEXT_PUBLIC_DEMO_ORG_ID as string | undefined) || '';
   // Hide Demo Org ID until a session is started
   const [orgId, setOrgId] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [claimToken, setClaimToken] = useState<string | null>(null);
-  const invalidOrgId = orgId && !/^[a-f0-9]{24}$/i.test(orgId);
+  const trimmedOrgId = orgId.trim();
+  const invalidOrgId = trimmedOrgId && !/^[a-f0-9]{24}$/i.test(trimmedOrgId);
 
   const go = useCallback(
     async (preset: RolePreset, orgOverride?: string) => {
       setError(null);
-      const targetOrgId = orgOverride || orgId;
+      const targetOrgId = orgOverride || trimmedOrgId;
+      if (!orgOverride && invalidOrgId) {
+        setError('Enter a valid Demo Organization ID to continue.');
+        return;
+      }
       if (!targetOrgId) {
         setError('Enter a Demo Org ID to continue.');
         return;
@@ -226,7 +144,7 @@ export default function DemoHub() {
         setBusy(false);
       }
     },
-    [orgId, router],
+    [invalidOrgId, router, trimmedOrgId],
   );
 
   const logout = useCallback(async () => {
@@ -237,12 +155,17 @@ export default function DemoHub() {
 
   const startDemo = useCallback(async (): Promise<string | null> => {
     try {
+      if (invalidOrgId) {
+        setError('Enter a valid Demo Organization ID to continue.');
+        return null;
+      }
+      setError(null);
       setBusy(true);
       const res = await fetch('/api/demo/session/start', {
         method: 'POST',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orgId: orgId || undefined }),
+        body: JSON.stringify({ orgId: trimmedOrgId || undefined }),
       });
       const ct = res.headers.get('content-type') || '';
       let data: any = null;
@@ -262,25 +185,44 @@ export default function DemoHub() {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [invalidOrgId, trimmedOrgId]);
 
   const finishDemo = useCallback(async () => {
     try {
+      setError(null);
       setBusy(true);
       // Ask backend to purge demo data (stubbed now)
       await fetch('/api/demo/purge', {
         method: 'POST',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orgId }),
+        body: JSON.stringify({ orgId: trimmedOrgId }),
       });
       await fetch('/api/demo/session/end', { method: 'POST', cache: 'no-store' });
+      await logout();
       setOrgId('');
       setClaimToken(null);
     } catch {
     } finally {
       setBusy(false);
     }
+  }, [logout, trimmedOrgId]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/demo/info', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!alive || !data?.ok) return;
+        setOrgId(String(data.orgId || ''));
+        setClaimToken(data?.claimToken ? String(data.claimToken) : null);
+      } catch {}
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -308,90 +250,11 @@ export default function DemoHub() {
     [startDemo, go],
   );
 
-  // Removed paste adornment/button for simplicity
-
-  const features = [
-    {
-      title: 'Smart scheduling',
-      desc: 'Drag-and-drop board, templates, and coverage goals.',
-      Icon: CalendarDays,
-      from: '#0ea5e9', // sky-500
-      to: '#6366f1', // indigo-500
-      ring: '#7dd3fc', // sky-300
-    },
-    {
-      title: 'Employee-first',
-      desc: 'Availability, swap requests, notifications, and iCal.',
-      Icon: Users,
-      from: '#10b981', // emerald-500
-      to: '#14b8a6', // teal-500
-      ring: '#6ee7b7', // emerald-300
-    },
-    {
-      title: 'Ready for growth',
-      desc: 'Roles, policies, and billing to match your team size.',
-      Icon: TrendingUp,
-      from: '#6366f1', // indigo-500
-      to: '#8b5cf6', // violet-500
-      ring: '#a5b4fc', // indigo-300
-    },
-  ];
-
-  const steps = [
-    {
-      t: 'Pick a role',
-      d: 'Manager, Employee, or Owner—each shows a different view.',
-    },
-    {
-      t: 'Explore real workflows',
-      d: 'Open the calendar, coverage, and approvals.',
-    },
-    {
-      t: 'Start free',
-      d: 'Like it? Create your org and invite your team.',
-    },
-  ];
-
-  const testimonials = [
-    {
-      quote: 'We cut scheduling time by more than half. The coverage heatmap is a game changer.',
-      by: 'Alex P., Operations Lead',
-    },
-    {
-      quote:
-        'Swaps and notifications just work. Our team knows exactly when schedules are published.',
-      by: 'Monica R., Store Manager',
-    },
-    {
-      quote: 'Fast to learn and easy to roll out. The team was up and running in a day.',
-      by: 'Sam T., Clinic Director',
-    },
-    {
-      quote: 'The availability tools made it simple to build fair schedules.',
-      by: 'Jamie L., Front Desk Lead',
-    },
-  ];
-
-  const faqs = [
-    {
-      q: 'Do I need an account to try the demo?',
-      a: 'No. Use the role buttons above with a Demo Organization ID.',
-    },
-    {
-      q: "I don't have a Demo Organization ID.",
-      a: "No problem—click any role above and we'll create a temporary demo org for you automatically. You can also sign up to import the demo data into your own org, or contact us for a hosted demo.",
-    },
-    {
-      q: 'Can I invite my team?',
-      a: 'Yes—create your own org on signup to invite teammates safely.',
-    },
-  ];
-
   return (
     <PageLayout>
       <PageHeader
-        title="Live demo"
-        subtitle="See how NextShyft helps teams build smart schedules in minutes. Plan coverage, manage availability, and handle swaps—without spreadsheets."
+        title="Try the demo"
+        subtitle="Pick a role to explore with sample data. No account required."
         titleStart={
           <Link href="/" aria-label="Go to home">
             <div className="flex flex-col items-start">
@@ -404,24 +267,9 @@ export default function DemoHub() {
         titleBelow
         variant="compact"
         actions={
-          <div className="flex items-center gap-2">
-            <Button
-              component="a"
-              href="#demo-roles"
-              title="Jump to demo roles"
-              variant="contained"
-              color="info"
-              size="small"
-              className="group"
-              endIcon={
-                <ArrowRight
-                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                  strokeWidth={ICON_STROKE}
-                  aria-hidden
-                />
-              }
-            >
-              Explore the demo
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button component="a" href="/signin" variant="outlined" color="inherit" size="small">
+              Sign in
             </Button>
             <Button component="a" href="/signup" variant="outlined" color="inherit" size="small">
               Start free
@@ -429,106 +277,6 @@ export default function DemoHub() {
           </div>
         }
       />
-
-      <PageSection variant="card" title="Why NextShyft" padding={3}>
-        <Box sx={{ position: 'relative' }}>
-          <Box
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-xl"
-            sx={{
-              background:
-                'radial-gradient(800px 200px at 10% -10%, rgba(59,130,246,0.06), transparent), radial-gradient(700px 200px at 90% 110%, rgba(16,185,129,0.06), transparent)',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'relative',
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-              },
-            }}
-          >
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="group rounded-xl border border-slate-200 bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition shadow-slate-200/60"
-                style={{ textAlign: 'center' }}
-              >
-                <div className="h-0.5 bg-gradient-to-r from-sky-500/50 via-indigo-500/50 to-emerald-500/50 rounded-full mb-3" />
-                <div
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
-                >
-                  <IconChip Icon={f.Icon} from={f.from} to={f.to} ring={f.ring} size={56} />
-                  <p className="font-semibold text-slate-900" style={{ fontSize: 18 }}>
-                    {f.title}
-                  </p>
-                </div>
-                <p className="text-slate-600" style={{ fontSize: 14, marginTop: 0 }}>
-                  {f.desc}
-                </p>
-              </div>
-            ))}
-          </Box>
-        </Box>
-      </PageSection>
-
-      <PageSection variant="card" title="How it works" padding={3}>
-        <Box sx={{ position: 'relative' }}>
-          <Box
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-xl"
-            sx={{
-              background:
-                'radial-gradient(900px 220px at 0% 0%, rgba(99,102,241,0.06), transparent), radial-gradient(700px 220px at 100% 100%, rgba(20,184,166,0.06), transparent)',
-            }}
-          />
-          <Box
-            component="ol"
-            sx={{
-              listStyle: 'none',
-              paddingLeft: 0,
-              position: 'relative',
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-              },
-            }}
-          >
-            {steps.map((s, idx) => (
-              <li
-                key={idx}
-                className="group rounded-xl border border-slate-200 bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition shadow-slate-200/60"
-                style={{ textAlign: 'center' }}
-              >
-                <div className="absolute">{/* decorative only */}</div>
-                <div
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
-                >
-                  <NumberChip
-                    n={idx + 1}
-                    from={STEP_STYLES[idx % STEP_STYLES.length].from}
-                    to={STEP_STYLES[idx % STEP_STYLES.length].to}
-                    ring={STEP_STYLES[idx % STEP_STYLES.length].ring}
-                  />
-                  <p className="font-medium text-slate-900" style={{ fontSize: 18 }}>
-                    {s.t}
-                  </p>
-                  <p className="text-slate-600" style={{ fontSize: 14, marginTop: 4 }}>
-                    {s.d}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </Box>
-        </Box>
-      </PageSection>
 
       <div id="demo-roles">
         <PageSection variant="card" title="Try the demo" padding={3}>
@@ -558,8 +306,8 @@ export default function DemoHub() {
               sx={{
                 display: 'grid',
                 gap: 1.5,
-                opacity: busy || !orgId ? 0.6 : 1,
-                pointerEvents: busy || !orgId ? 'none' : 'auto',
+                opacity: busy || !!invalidOrgId ? 0.6 : 1,
+                pointerEvents: busy ? 'none' : 'auto',
                 gridTemplateColumns: {
                   xs: '1fr',
                   sm: 'repeat(2, 1fr)',
@@ -614,13 +362,13 @@ export default function DemoHub() {
                 </ul>
                 <Button
                   onClick={() => ensureOrgAndGo('MANAGER')}
-                  disabled={busy || !orgId}
+                  disabled={busy || !!invalidOrgId}
                   variant="contained"
                   color="info"
                   size="medium"
                   className="mt-4 group"
                   aria-busy={busy}
-                  aria-disabled={busy || !orgId}
+                  aria-disabled={busy || !!invalidOrgId}
                   aria-label={`View Manager demo${orgId ? ` for org ${orgId}` : ''}`}
                   endIcon={
                     <ArrowRight
@@ -675,13 +423,13 @@ export default function DemoHub() {
                 </ul>
                 <Button
                   onClick={() => ensureOrgAndGo('EMPLOYEE')}
-                  disabled={busy || !orgId}
+                  disabled={busy || !!invalidOrgId}
                   variant="contained"
                   color="success"
                   size="medium"
                   className="mt-4 group"
                   aria-busy={busy}
-                  aria-disabled={busy || !orgId}
+                  aria-disabled={busy || !!invalidOrgId}
                   aria-label={`View Employee demo${orgId ? ` for org ${orgId}` : ''}`}
                   endIcon={
                     <ArrowRight
@@ -742,13 +490,13 @@ export default function DemoHub() {
                 </ul>
                 <Button
                   onClick={() => ensureOrgAndGo('OWNER')}
-                  disabled={busy || !orgId}
+                  disabled={busy || !!invalidOrgId}
                   variant="contained"
                   color="inherit"
                   size="medium"
                   className="mt-4 group"
                   aria-busy={busy}
-                  aria-disabled={busy || !orgId}
+                  aria-disabled={busy || !!invalidOrgId}
                   aria-label={`View Owner demo${orgId ? ` for org ${orgId}` : ''}`}
                   endIcon={
                     <ArrowRight
@@ -853,90 +601,6 @@ export default function DemoHub() {
           </Box>
         </PageSection>
       </div>
-
-      <PageSection variant="card" title="What teams say" padding={3}>
-        <Box sx={{ position: 'relative' }}>
-          <Box
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-xl"
-            sx={{
-              background:
-                'radial-gradient(700px 200px at 15% 0%, rgba(59,130,246,0.05), transparent), radial-gradient(700px 200px at 85% 100%, rgba(99,102,241,0.05), transparent)',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'relative',
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: {
-                xs: '1fr',
-                md: 'repeat(2, 1fr)',
-              },
-            }}
-          >
-            {testimonials.map((t) => (
-              <div
-                key={t.by}
-                className="relative rounded-xl border border-slate-200 bg-white p-5 hover:shadow-md hover:-translate-y-0.5 transition shadow-slate-200/60"
-                style={{ display: 'flex', flexDirection: 'column' }}
-              >
-                <div
-                  className="h-9 w-9 inline-flex items-center justify-center rounded-full ring-1 ring-offset-1 ring-offset-white bg-slate-100 text-slate-600 ring-slate-200"
-                  aria-hidden
-                >
-                  <Quote className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                </div>
-                <blockquote className="mt-3 text-sm text-slate-800 italic leading-relaxed">
-                  “{t.quote}”
-                </blockquote>
-                <div className="mt-3 h-px bg-slate-100" aria-hidden />
-                <footer className="mt-2 text-xs text-slate-500">— {t.by}</footer>
-              </div>
-            ))}
-          </Box>
-        </Box>
-      </PageSection>
-
-      <PageSection variant="card" title="FAQ" padding={3}>
-        <Box sx={{ display: 'grid', gap: 1.5 }}>
-          {faqs.map((f, idx) => (
-            <Accordion
-              key={f.q}
-              disableGutters
-              elevation={0}
-              sx={{
-                border: '1px solid #e5e7eb',
-                borderRadius: 2,
-                '&:hover': { backgroundColor: '#f8fafc' },
-                '&.Mui-expanded': { borderColor: '#c7d2fe', backgroundColor: '#f8fafc' },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls={`faq-panel-${idx}`}
-                id={`faq-header-${idx}`}
-                sx={{
-                  '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-                    transform: 'rotate(180deg)',
-                  },
-                }}
-              >
-                <Typography variant="body1" fontWeight={600} sx={{ color: '#111827' }}>
-                  {f.q}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography variant="body2" sx={{ color: '#4b5563' }}>
-                  {f.a}
-                </Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
-      </PageSection>
-
-      {/* Bottom CTA removed per request */}
     </PageLayout>
   );
 }
