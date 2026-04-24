@@ -35,4 +35,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# test artifacts
+/test-results/
+
+# cleanup artifacts
+node_modules_backup*/
+.pkgfix/
